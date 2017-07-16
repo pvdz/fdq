@@ -123,7 +123,7 @@ function _preSolver(dsl, Solver, options, solveOptions) {
     console.timeEnd('- generating early solution');
   }
 
-  if (newdsl.length < 1000 || !Solver) console.log('\nResult dsl (debugDsl=' + debugDsl + ', hashNames=' + hashNames + ', indexNames=' + indexNames + '):\n' + newdsl);
+  if (newdsl.length < 1000 || !Solver || solveOptions._toString) console.log('\nResult dsl (debugDsl=' + debugDsl + ', hashNames=' + hashNames + ', indexNames=' + indexNames + '):\n' + newdsl);
 
   if (solution) {
     console.error('<solved without finitedomain>');

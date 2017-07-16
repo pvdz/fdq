@@ -1245,7 +1245,7 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
     let loops = 0;
     do {
       ++loops;
-      TRACE(' - mul propagation step...', loops, domain__debug(R), '=', domain__debug(A), '+', domain__debug(B));
+      TRACE(' - mul propagation step...', loops, domain__debug(R), '=', domain__debug(A), '*', domain__debug(B));
       oA = A;
       oB = B;
       oR = R;
@@ -1264,7 +1264,7 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
       if (!A || !B || !R) return;
     }
 
-    ASSERT((domain_isSolved(A) + domain_isSolved(B) + domain_isSolved(R)) !== 2, 'if two vars are solved the third should be solved as well');
+    ASSERT((domain_isSolved(A) + domain_isSolved(B) + domain_isSolved(R)) !== 2 || domain_getValue(R) === 0, 'if two vars are solved the third should be solved as well unless R is 0');
 
     if (domain_isSolved(R) && domain_isSolved(A)) {
       ASSERT(domain_isSolved(B), 'if two are solved then all three must be solved');
@@ -1355,6 +1355,15 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
 
     TRACE(' = min_isEq', indexR, '=', indexA, '==?', indexB, '   ->   ', domain__debug(R), '=', domain__debug(A), '==?', domain__debug(B));
     if (!A || !B || !R) return;
+
+    if (indexA === indexB) {
+      TRACE(' - A and B are same index so forcing R to 1 and removing constraint');
+      let oR = R;
+      R = domain_removeValue(R, 0);
+      if (R !== oR) updateDomain(indexR, R, 'iseq R: A!=B');
+      ml_eliminate(ml, offset, SIZEOF_VVV);
+      return;
+    }
 
     let vA = domain_getValue(A);
     let vB = domain_getValue(B);
