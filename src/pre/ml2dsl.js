@@ -88,6 +88,7 @@ function ml2dsl(ml, problem, bounty, options) {
   let {
     varNames,
     domains,
+    valdist,
     getDomain,
     getAlias,
     solveStack,
@@ -150,6 +151,28 @@ function ml2dsl(ml, problem, bounty, options) {
         ASSERT(domain_getValue(domain) < 0, 'solved vars should be aliased to their constant');
         ++unsolved;
         str = ': ' + toName(index) + ' [' + domain_toArr(domain) + ']';
+
+        let vardist = valdist[index];
+        if (vardist) {
+          switch (vardist.valdist) {
+            case 'max':
+            case 'mid':
+            case 'min':
+            case 'naive':
+              str += ' @' + vardist.valdist;
+              break;
+            case 'list':
+              str += ' @' + vardist.valdist;
+              str += ' prio(' + vardist.list + ')';
+              break;
+            case 'minMaxCycle':
+            case 'splitMax':
+            case 'splitMin':
+            case 'markov':
+            default:
+              THROW('unknown var dist [' + vardist.valdist + ']');
+          }
+        }
       }
       varDecls[index] = str;
     });

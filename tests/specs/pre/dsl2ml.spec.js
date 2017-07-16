@@ -164,49 +164,49 @@ describe('specs/dsl2ml.spec', function() {
           expect(_ => Solver.pre(`
             : A [0 10] @max
             A > 5
-          `)).to.throw('implement me (var mod)');
+          `)).not.to.throw();
         });
 
         it('should parse', function() {
           expect(_ => Solver.pre(`
             : A [0 10] @min
             A > 5
-          `)).to.throw('implement me (var mod)');
+          `)).not.to.throw();
         });
 
         it('should parse', function() {
           expect(_ => Solver.pre(`
             : A [0 10] @mid
             A > 5
-          `)).to.throw('implement me (var mod)');
+          `)).not.to.throw();
         });
 
         it('should parse', function() {
           expect(_ => Solver.pre(`
             : A [0 10] @minMaxCycle
             A > 5
-          `)).to.throw('implement me (var mod)');
+          `)).to.throw('TODO: implement this modifier');
         });
 
         it('should parse', function() {
           expect(_ => Solver.pre(`
             : A [0 10] @naive
             A > 5
-          `)).to.throw('implement me (var mod)');
+          `)).not.to.throw();
         });
 
         it('should parse', function() {
           expect(_ => Solver.pre(`
             : A [0 10] @splitMax
             A > 5
-          `)).to.throw('implement me (var mod)');
+          `)).to.throw('TODO: implement this modifier');
         });
 
         it('should parse', function() {
           expect(_ => Solver.pre(`
             : A [0 10] @splitMin
             A > 5
-          `)).to.throw('implement me (var mod)');
+          `)).to.throw('TODO: implement this modifier');
         });
 
         it('should throw for unknowns', function() {
@@ -247,7 +247,7 @@ describe('specs/dsl2ml.spec', function() {
           expect(_ => Solver.pre(`
             : A [0 10] @markov matrix([{vector: [10, 1]}]) legend(1, 0) expand(1)
             A > 5
-          `)).to.throw('implement me (var mod)');
+          `)).to.throw('implement me (var mod');
         });
       });
     });

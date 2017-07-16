@@ -38,12 +38,8 @@ import {
 
 const MAX_VAR_COUNT = 0xffff; // 16bit
 
-function $addVar($varTrie, $vars, $domains, $constants, $addAlias, $getAnonCounter, $targeted, $targetsFrozen, name, domain, modifier, returnName, returnIndex, _throw) {
+function $addVar($varTrie, $vars, $domains, $valdist, $constants, $addAlias, $getAnonCounter, $targeted, $targetsFrozen, name, domain, modifier, returnName, returnIndex, _throw) {
   TRACE('addVar', name, domain, modifier, returnName ? '(return name)' : '', returnIndex ? '(return index)' : '');
-  if (modifier) {
-    if (_throw) _throw('implement me (var mod)');
-    THROW('implement me (var mod)');
-  }
   if (typeof name === 'number') {
     domain = name;
     name = undefined;
@@ -88,6 +84,25 @@ function $addVar($varTrie, $vars, $domains, $constants, $addAlias, $getAnonCount
     newIndex = constIndex;
   }
 
+  if (modifier) {
+    $valdist[newIndex] = modifier;
+
+    switch (modifier.valtype) {
+      case 'list':
+      case 'max':
+      case 'mid':
+      case 'min':
+      case 'minMaxCycle':
+      case 'naive':
+      case 'splitMax':
+      case 'splitMin':
+        break;
+      default:
+        if (_throw) _throw('implement me (var mod [' + modifier.valtype + '])');
+        THROW('implement me (var mod [' + modifier.valtype + '])');
+    }
+  }
+
   // deal with explicitly requested return values...
   if (returnIndex) return newIndex;
   if (returnName) return name;
@@ -99,7 +114,7 @@ function $name2index($varTrie, $getAlias, name, skipAliasCheck, scanOnly) {
   if (!skipAliasCheck && varIndex >= 0) varIndex = $getAlias(varIndex);
   return varIndex;
 }
-function $addAlias($domains, $aliases, $solveStack, indexOld, indexNew, _origin, noSolveStack) {
+function $addAlias($domains, $valdist, $aliases, $solveStack, indexOld, indexNew, _origin, noSolveStack) {
   TRACE(' - $addAlias' + (_origin ? ' (from ' + _origin + ')' : '') + ': Mapping index = ', indexOld, '(', domain__debug($domains[indexOld]), ') to index = ', indexNew, '(', indexNew >= $domains.length ? 'some constant' : domain__debug($domains[indexNew]), ')');
   ASSERT(typeof indexOld === 'number', 'old index should be a number', indexOld);
   ASSERT(typeof indexNew === 'number', 'new index should be a number', indexNew);
@@ -116,6 +131,7 @@ function $addAlias($domains, $aliases, $solveStack, indexOld, indexNew, _origin,
 
   $aliases[indexOld] = indexNew;
   $domains[indexOld] = false; // mark as aliased. while this isnt a change itself, it could lead to some dedupes
+  if (!$valdist[indexNew] && $valdist[indexOld]) $valdist[indexNew] = $valdist[indexOld]; // this shouldnt happen for constants...
 }
 function $getAlias($aliases, index) {
   let alias = $aliases[index]; // TODO: is a trie faster compared to property misses?
@@ -139,7 +155,7 @@ function $getDomain($domains, $constants, $getAlias, varIndex, skipAliasCheck) {
 
   return $domains[varIndex];
 }
-function _assertSetDomain($domains, $constants, $aliases, $addAlias, $getAlias, varIndex, domain, skipAliasCheck) {
+function _assertSetDomain($domains, $constants, $getAlias, varIndex, domain, skipAliasCheck) {
   // there's a bunch of stuff to assert. this function should not be called without ASSERT and should be eliminated as dead code by the minifier...
 
   // args check
@@ -157,7 +173,7 @@ function $setDomain($domains, $constants, $aliases, $addAlias, $getAlias, varInd
     if (emptyHandled) return; // todo...
     THROW('Cannot set to empty domain');
   } // handle elsewhere!
-  ASSERT(_assertSetDomain($domains, $constants, $aliases, $addAlias, $getAlias, varIndex, domain, skipAliasCheck));
+  ASSERT(_assertSetDomain($domains, $constants, $getAlias, varIndex, domain, skipAliasCheck));
 
   let value = domain_getValue(domain);
   if (value >= 0) return _$setToConstant($constants, $addAlias, varIndex, value);
@@ -210,9 +226,10 @@ function problem_create() {
   let aliases = {};
   let solveStack = [];
 
+  // per-var distribution overrides. all vars default to the global distribution setting if set and otherwise naive
   let valdist = []; // 1:1 with varNames. contains json objects {valtype: 'name', ...}
 
-  let addAlias = $addAlias.bind(undefined, domains, aliases, solveStack);
+  let addAlias = $addAlias.bind(undefined, domains, valdist, aliases, solveStack);
   let getAlias = $getAlias.bind(undefined, aliases);
   let name2index = $name2index.bind(undefined, varTrie, getAlias);
 
@@ -222,8 +239,8 @@ function problem_create() {
   return {
     varTrie,
     varNames,
-    valdist,
     domains,
+    valdist,
     aliases,
     solveStack,
 
@@ -235,7 +252,7 @@ function problem_create() {
     ml: undefined, // Buffer
     mapping: undefined, // var index in (this) child to var index of parent
 
-    addVar: $addVar.bind(undefined, varTrie, varNames, domains, constants, addAlias, _ => ++anonCounter, targeted, _ => targetsFrozen),
+    addVar: $addVar.bind(undefined, varTrie, varNames, domains, valdist, constants, addAlias, _ => ++anonCounter, targeted, _ => targetsFrozen),
     getVar: name2index, // deprecated
     name2index,
     addAlias,

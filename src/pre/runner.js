@@ -42,6 +42,8 @@ import {
   domain_containsValue,
   domain_getValue,
   domain_intersection,
+  domain_max,
+  domain_middleElement,
   domain_min,
   domain_toArr,
   domain_arrToSmallest,
@@ -319,12 +321,18 @@ function createSolution(problem, fdsolution, options, max) {
             dist.list.some(w => domain_containsValue(domain, w) && (v = w) >= 0);
             if (v < 0) v = domain_min(domain); // none of the prioritized values still exist so just pick one
             break;
-          case 'markov':
           case 'max':
+            v = domain_max(domain);
+            break;
           case 'min':
-          case 'mid':
-          case 'minMaxCycle':
           case 'naive':
+            v = domain_min(domain);
+            break;
+          case 'mid':
+            v = domain_middleElement(domain);
+            break;
+          case 'markov':
+          case 'minMaxCycle':
           case 'splitMax':
           case 'splitMin':
             THROW('implement me (var mod) [' + dist.valtype + ']');

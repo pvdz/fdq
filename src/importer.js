@@ -315,12 +315,12 @@ function importer_main(str, solver, _debug) {
       case 'max':
       case 'mid':
       case 'min':
-      case 'minMaxCycle':
       case 'naive':
-      case 'splitMax':
-      case 'splitMin':
         break;
 
+      case 'minMaxCycle':
+      case 'splitMax':
+      case 'splitMin':
       default:
         THROW('Expecting a strategy name after the `@` modifier (`' + stratName + '`)');
     }

@@ -378,9 +378,7 @@ function dsl2ml(dslStr, problem, _debug) {
     }
   }
   function addParsedVar(name, domain, mod) {
-    let varIndex = addVar(name, domain, undefined, false, true, THROW);
-    setValDist(varIndex, mod);
-    return varIndex;
+    return addVar(name, domain, mod, false, true, THROW);
   }
 
   function parseIdentifier() {
@@ -554,13 +552,15 @@ function dsl2ml(dslStr, problem, _debug) {
       case 'max':
       case 'mid':
       case 'min':
-      case 'minMaxCycle':
       case 'naive':
-      case 'splitMax':
-      case 'splitMin':
         mod.valtype = stratName;
         break;
 
+      case 'minMaxCycle':
+      case 'splitMax':
+      case 'splitMin':
+        THROW('TODO: implement this modifier [' + stratName + ']');
+        break;
       default:
         THROW('Expecting a strategy name after the `@` modifier (`' + stratName + '`)');
     }
