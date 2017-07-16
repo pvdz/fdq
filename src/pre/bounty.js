@@ -85,6 +85,7 @@ const BOUNTY_SUM_RESULT_ONLY_FLAG = 1 << ++bounty_flagCounter;
 const BOUNTY_SUM_RESULT = BOUNTY_SUM_RESULT_ONLY_FLAG | BOUNTY_NOT_BOOLY_ONLY_FLAG;
 const BOUNTY_PLUS_RESULT_ONLY_FLAG = 1 << ++bounty_flagCounter;
 const BOUNTY_PLUS_RESULT = BOUNTY_PLUS_RESULT_ONLY_FLAG | BOUNTY_NOT_BOOLY_ONLY_FLAG;
+const BOUNTY_JUST_IGNORE = 1 << ++bounty_flagCounter;
 
 ASSERT(bounty_flagCounter <= 16, 'can only run with 16 flags, or must increase flag size');
 
@@ -148,26 +149,33 @@ function bounty_collect(ml, problem, bounty) {
     if (domain_getValue(domain) >= 0) return; // ignore all constants. solved vars and constants are not relevant to bounty
 
     let varOffset = getBountyOffset(index);
-    ASSERT(bounty[varOffset] < 0xff, 'constraint count should not overflow');
+
+    //ASSERT(bounty[varOffset] < 0xff, 'constraint count should not overflow');
+
     let countIndex = bounty[varOffset]++; // count, but as zero-offset
 
     let flagsOffset = varOffset + BOUNTY_LINK_COUNT;
-    ASSERT(BOUNTY_META_FLAGS === 16, 'update code if this changes');
-    let currentFlags = bounty.readUInt16BE(flagsOffset);
-
-    TRACE(' >> collecting for index=', index, ' -> count now:', bounty[varOffset], 'flags:', bounty__debugMeta(currentFlags), '|=', bounty__debugMeta(metaFlags), ' -> ', bounty__debugMeta(currentFlags | metaFlags), 'from', flagsOffset, 'domain:', domain__debug(domain));
-
-    if (countIndex < BOUNTY_MAX_OFFSETS_TO_TRACK) {
-      let offsetsOffset = getOffsetsOffset(index);
-      let nextOffset = offsetsOffset + countIndex * BOUNTY_BYTES_PER_OFFSET;
-      TRACE(' - tracking offset; countIndex=', countIndex, ', putting offset at', nextOffset);
-      bounty.writeUInt32BE(pc, nextOffset);
+    if (countIndex >= 0xff) {
+      // hardcoded limit. just ignore this var. we cant safely optimize this.
+      bounty.writeUInt16BE(BOUNTY_JUST_IGNORE, flagsOffset);
     } else {
-      TRACE(' - unable to track offset; countIndex beyond max;', countIndex, '>', BOUNTY_MAX_OFFSETS_TO_TRACK);
-    }
+      ASSERT(BOUNTY_META_FLAGS === 16, 'update code if this changes because they currently only write 16bits');
+      let currentFlags = bounty.readUInt16BE(flagsOffset);
 
-    ASSERT(BOUNTY_META_FLAGS === 16, 'update code if this changes');
-    bounty.writeUInt16BE(currentFlags | metaFlags, flagsOffset);
+      TRACE(' >> collecting for index=', index, ' -> count now:', bounty[varOffset], 'flags:', bounty__debugMeta(currentFlags), '|=', bounty__debugMeta(metaFlags), ' -> ', bounty__debugMeta(currentFlags | metaFlags), 'from', flagsOffset, 'domain:', domain__debug(domain));
+
+      if (countIndex < BOUNTY_MAX_OFFSETS_TO_TRACK) {
+        let offsetsOffset = getOffsetsOffset(index);
+        let nextOffset = offsetsOffset + countIndex * BOUNTY_BYTES_PER_OFFSET;
+        TRACE(' - tracking offset; countIndex=', countIndex, ', putting offset at', nextOffset);
+        bounty.writeUInt32BE(pc, nextOffset);
+      } else {
+        TRACE(' - unable to track offset; countIndex beyond max;', countIndex, '>', BOUNTY_MAX_OFFSETS_TO_TRACK);
+      }
+
+      ASSERT(BOUNTY_META_FLAGS === 16, 'update code if this changes');
+      bounty.writeUInt16BE(currentFlags | metaFlags, flagsOffset);
+    }
   }
 
   function bountyLoop() {
