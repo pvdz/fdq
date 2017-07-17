@@ -154,15 +154,15 @@ function ml2dsl(ml, problem, bounty, options) {
 
         let vardist = valdist[index];
         if (vardist) {
-          switch (vardist.valdist) {
+          switch (vardist.valtype) {
             case 'max':
             case 'mid':
             case 'min':
             case 'naive':
-              str += ' @' + vardist.valdist;
+              str += ' @' + vardist.valtype;
               break;
             case 'list':
-              str += ' @' + vardist.valdist;
+              str += ' @' + vardist.valtype;
               str += ' prio(' + vardist.list + ')';
               break;
             case 'minMaxCycle':
@@ -170,7 +170,7 @@ function ml2dsl(ml, problem, bounty, options) {
             case 'splitMin':
             case 'markov':
             default:
-              THROW('unknown var dist [' + vardist.valdist + ']');
+              THROW('unknown var dist [' + vardist.valtype + '] ' + JSON.stringify(vardist));
           }
         }
       }
@@ -251,6 +251,8 @@ ${varDeclsString}
   }
 
   function m2d_decA(op) {
+    ASSERT(typeof op === 'string' && op, 'op should be string');
+
     let a = getAlias(m2d_dec16());
     let A = getDomain(a);
     let vA = domain_getValue(A);
@@ -278,6 +280,8 @@ ${varDeclsString}
   }
 
   function m2d_decAb(op) {
+    ASSERT(typeof op === 'string' && op, 'op should be string');
+
     let a = getAlias(m2d_dec16());
     let A = getDomain(a);
     let vA = domain_getValue(A);
@@ -315,6 +319,8 @@ ${varDeclsString}
   }
 
   function m2d_decAbc(op) {
+    ASSERT(typeof op === 'string' && op, 'op should be string');
+
     let a = getAlias(m2d_dec16());
     let A = getDomain(a);
     let vA = domain_getValue(A);
@@ -363,6 +369,8 @@ ${varDeclsString}
 
 
   function m2d_listVoid(callName) {
+    ASSERT(typeof callName === 'string' && callName, 'callName should be string');
+
     let argCount = m2d_dec16();
     let indexes = '';
     let counters = '';
@@ -404,11 +412,15 @@ ${varDeclsString}
   }
 
   function m2d_listResult(callName) {
+    ASSERT(typeof callName === 'string' && callName, 'callName should be string');
+
     let argCount = m2d_dec16();
     return m2d_listResultBody(callName, argCount);
   }
 
   function m2d_listResultBody(callName, argCount) {
+    ASSERT(typeof callName === 'string' && callName, 'callName should be string');
+
     let indexes = '';
     let counters = '';
     let argNames = '';
@@ -629,11 +641,11 @@ ${varDeclsString}
         case ML_DEBUG:
           TRACE(' ! debug');
           // dont send this to finitedomain; it wont know what to do with it
+          let i = m2d_decA('<debug>');
           if (DEBUG) {
-            let i = m2d_decA('debug');
             part = '@custom noleaf ' + i + '\n';
           } else {
-            m2d_decA(); // skip
+            // skip
           }
           break;
         case ML_NOOP:
