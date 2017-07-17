@@ -207,11 +207,13 @@ function ml_enc32(ml, pc, num) {
 
 function ml_eliminate(ml, offset, sizeof) {
   ASSERT(ml instanceof Buffer, 'ml should be buffer', ml);
+  ASSERT(ml_validateSkeleton(ml, 'ml_eliminate; before'));
   TRACE(' - ml_eliminate: eliminating constraint at', offset, 'with size =', sizeof, ml.length < 50 ? ml : '');
   ASSERT(typeof offset === 'number' && offset >= 0 && offset < ml.length, 'valid offset required');
   ASSERT(typeof sizeof === 'number' && sizeof >= 0, 'valid sizeof required');
   ml_jump(ml, offset, sizeof);
   TRACE('    - after ml_eliminate:', ml.length < 50 ? ml : '<trunced>');
+  ASSERT(ml_validateSkeleton(ml, 'ml_eliminate; after'));
 }
 
 function ml_skip(ml, offset, len) {
@@ -275,6 +277,7 @@ function ml_jump(ml, offset, len) {
         ml_enc32(ml, offset + 1, len - SIZEOF_W);
       }
   }
+  //ASSERT(ml_validateSkeleton(ml, 'ml_jump; after'));
 }
 
 function ml_pump(ml, offset, from, to, len) {
@@ -407,7 +410,7 @@ function ml_any2c(ml, offset, oldSizeof, opCode, args) {
 }
 
 function ml_cr2vv(ml, offset, len, opCode, indexA, indexB) {
-  // "count with result" (not like sum, which is c8r)
+  // "count with result"
   TRACE(' -| ml_cr2vv | from', offset, ', len=', len, ', op=', opCode, indexA, indexB);
   ASSERT(ml instanceof Buffer, 'ml is buffer', ml);
   ASSERT(typeof offset === 'number' && offset > 0 && offset < ml.length, 'valid offset', offset);

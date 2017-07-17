@@ -355,7 +355,7 @@ describe('specs/minimizer.spec', function() {
         R = all?(A B C)
       `);
 
-      expect(solution).to.eql({A: 1, B: 5, C: 0, R: 0});
+      expect(solution).to.eql({A: [1, 6], B: [5, 8, 10, 42], C: [1, 10], R: 1});
     });
 
     it('should solve by defer if unsolved immediately R=*', function() {
@@ -368,7 +368,7 @@ describe('specs/minimizer.spec', function() {
         R = all?(A B C)
       `);
 
-      expect(solution).to.eql({A: 1, B: 5, C: 0, R: 0});
+      expect(solution).to.eql({A: [1, 6], B: [5, 8, 10, 42], C: [1, 10], R: [1, SUP]});
     });
 
     it('should morph if only right arg is non-zero', function() {
@@ -390,6 +390,81 @@ describe('specs/minimizer.spec', function() {
         : R [0 1]
         R = all?(A B)
         @custom noleaf A B R
+      `)).to.throw('ops: xnor #');
+    });
+
+    it('should drop vars that are non-zero without solving it', function() {
+      expect(_ => Solver.pre(`
+        @custom var-strat throw
+        : A [1 10]
+        : B [0 10]
+        : C [1 10]
+        : D [0 10]
+        : R [0 1]
+        R = all?(A B C D)
+        @custom noleaf A B C D R
+      `)).to.throw('ops: isall #');
+
+      expect(_ => Solver.pre(`
+        @custom var-strat throw
+        : A [1 10]
+        : B [1 10]
+        : C [0 10]
+        : D [0 10]
+        : R [0 1]
+        R = all?(A B C D)
+        @custom noleaf A B C D R
+      `)).to.throw('ops: isall #');
+
+      expect(_ => Solver.pre(`
+        @custom var-strat throw
+        : A [0 10]
+        : B [0 10]
+        : C [1 10]
+        : D [1 10]
+        : R [0 1]
+        R = all?(A B C D)
+        @custom noleaf A B C D R
+      `)).to.throw('ops: isall #');
+
+      expect(_ => Solver.pre(`
+        @custom var-strat throw
+        : A [0 10]
+        : B [0 10]
+        : C [1 10]
+        : R [0 1]
+        R = all?(A B C)
+        @custom noleaf A B C R
+      `)).to.throw('ops: isall #');
+
+      expect(_ => Solver.pre(`
+        @custom var-strat throw
+        : A [1 10]
+        : B [0 10]
+        : C [0 10]
+        : R [0 1]
+        R = all?(A B C)
+        @custom noleaf A B C R
+      `)).to.throw('ops: isall #');
+
+      expect(_ => Solver.pre(`
+        @custom var-strat throw
+        : A [0 10]
+        : B [1 10]
+        : C [0 10]
+        : R [0 1]
+        R = all?(A B C)
+        @custom noleaf A B C R
+      `)).to.throw('ops: isall #');
+
+      expect(_ => Solver.pre(`
+        @custom var-strat throw
+        : A [1 10]
+        : B [0 10]
+        : C [1 10]
+        : R [0 1]
+        R = all?(A B C)
+        @custom noleaf A B C R
       `)).to.throw('ops: xnor #');
     });
   });

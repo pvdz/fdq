@@ -56,6 +56,7 @@ import {
   SIZEOF_COUNT,
 
   ml__debug,
+  ml_cr2vv,
   ml_dec8,
   ml_dec16,
   ml_dec32,
@@ -686,7 +687,7 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
   function min_isAll(ml, offset) {
     let offsetCount = offset + 1;
     let argCount = ml_dec16(ml, offsetCount);
-    let opSize = SIZEOF_COUNT + argCount * 2 + 2;
+    let opSize = SIZEOF_COUNT + 2 + argCount * 2;
     let offsetArgs = offset + SIZEOF_COUNT;
     let offsetR = offset + opSize - 2;
 
@@ -694,7 +695,7 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
     let R = getDomainFast(indexR);
 
     TRACE(' = min_isAll', argCount, 'x');
-    TRACE('  - ml for this isAll:', ml.slice(offset, offset + opSize));
+    TRACE('  - ml for this isAll (' + opSize + 'b):', ml.slice(offset, offset + opSize));
     TRACE('  -', indexR, '= all?(', Array.from(Array(argCount)).map((n, i) => readIndex(ml, offsetArgs + i * 2)), ')');
     TRACE('  -', domain__debug(R), '= all?(', Array.from(Array(argCount)).map((n, i) => domain__debug(getDomainFast(readIndex(ml, offsetArgs + i * 2)))), ')');
 
@@ -726,6 +727,7 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
     ASSERT(domain_min(R) === 0 && domain_max(R) > 0, 'R is unresolved here', R);
     let allNonZero = true;
     let someAreZero = false;
+    let someNonZero = false;
     for (let i = 0; i < argCount; ++i) {
       let index = readIndex(ml, offsetArgs + i * 2);
       let domain = getDomainFast(index);
@@ -742,6 +744,8 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
       } else if (domain_min(domain) === 0) {
         // arg has zero and non-zero values so R (at least) cant be set to 1 yet
         allNonZero = false;
+      } else {
+        someNonZero = true;
       }
     }
 
@@ -751,19 +755,61 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
       R = domain_removeGtUnsafe(R, 0);
       if (R !== oR) updateDomain(indexR, R);
       ml_eliminate(ml, offset, opSize);
-    } else if (allNonZero) {
+      return;
+    }
+
+    if (allNonZero) {
       TRACE(' - No arg had zero so R=1 and constraint can be removed');
       let oR = R;
       R = domain_removeValue(R, 0);
       if (R !== oR) updateDomain(indexR, R);
       ml_eliminate(ml, offset, opSize);
-    } else {
-      // TODO: prune all args here that are nonzero? is that worth it?
-
-      TRACE(' - not only jumps...');
-      onlyJumps = false;
-      pc = offset + opSize;
+      return;
     }
+
+    // remove all non-zero values from the list. this reduces their connection count and simplifies this isall
+    if (someNonZero) {
+      let removed = 0;
+      for (let i = argCount - 1; i >= 0; --i) {
+        let index = readIndex(ml, offsetArgs + i * 2);
+        let domain = getDomainFast(index);
+        TRACE('   - checking if index', index, '(domain', domain__debug(domain), ') contains no zero so we can remove it from this isall');
+        if (domain_hasNoZero(domain)) {
+          // now
+          // - move all indexes bigger than the current back one position
+          // - compile the new count back in
+          // - compile a NOOP in the place of the last element
+          TRACE('  - moving further domains one space forward (from ', i + 1, ' / ', argCount, ')');
+          min_spliceArgSlow(ml, offsetArgs, argCount, i, true);
+          --argCount;
+          ++removed;
+        }
+      }
+
+      ml_enc16(ml, offset + 1, argCount);
+      // now "blank out" the space of eliminated constants, they should be at the end of the op
+      let newOpSize = opSize - removed * 2;
+      ml_skip(ml, offset + newOpSize, opSize - newOpSize);
+
+      TRACE(' - Removed', removed, 'non-zero args from unsolved isall, has', argCount, 'left');
+      TRACE(' - ml for this sum now:', ml.slice(offset, offset + opSize));
+
+      if (argCount === 1) _min_isAllMorphToXnor(ml, offset, argCount, offsetArgs, indexR);
+      return;
+    }
+
+    if (argCount === 1) return _min_isAllMorphToXnor(ml, offset, argCount, offsetArgs, indexR);
+
+    TRACE(' - not only jumps...');
+    onlyJumps = false;
+    pc = offset + opSize;
+  }
+  function _min_isAllMorphToXnor(ml, offset, argCount, offsetArgs, indexR) {
+    // while this usually only happens when eliminating non-zeroes, there may be an artifact where a script
+    // generated an isall with just one arg. kind of silly but whatever, right.
+    TRACE(' - Only one arg remaining; morphing to a XNOR');
+    let index = readIndex(ml, offsetArgs);
+    ml_cr2vv(ml, offset, argCount, ML_XNOR, indexR, index);
   }
 
   function min_isAll2(ml, offset) {
