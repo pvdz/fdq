@@ -370,6 +370,28 @@ describe('specs/minimizer.spec', function() {
 
       expect(solution).to.eql({A: 1, B: 5, C: 0, R: 0});
     });
+
+    it('should morph if only right arg is non-zero', function() {
+      expect(_ => Solver.pre(`
+        @custom var-strat throw
+        : A [0 10]
+        : B [1 10]
+        : R [0 1]
+        R = all?(A B)
+        @custom noleaf A B R
+      `)).to.throw('ops: xnor #');
+    });
+
+    it('should morph if only left arg is non-zero', function() {
+      expect(_ => Solver.pre(`
+        @custom var-strat throw
+        : A [1 10]
+        : B [0 10]
+        : R [0 1]
+        R = all?(A B)
+        @custom noleaf A B R
+      `)).to.throw('ops: xnor #');
+    });
   });
 
   describe('isnall', function() {

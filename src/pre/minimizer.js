@@ -810,12 +810,26 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
       return;
     }
 
-    if (domain_hasNoZero(A) && domain_hasNoZero(B)) {
+    let An0 = domain_hasNoZero(A);
+    let Bn0 = domain_hasNoZero(B);
+
+    if (An0 && Bn0) {
       TRACE(' - A and B have no zero so R>0, eliminate constraint');
       let oR = R;
       R = domain_removeValue(R, 0);
       if (R !== oR) updateDomain(indexR, R, 'isall2 R=1 because A>0 and B>0');
       ml_eliminate(ml, offset, SIZEOF_VVV);
+      return;
+    }
+
+    if (An0) {
+      TRACE(' - A has no 0 (and B must have) so morph to `R !^ B` because R=0 if B=0 and R>0 if B>0');
+      ml_vvv2vv(ml, offset, ML_XNOR, indexR, indexB);
+      return;
+    }
+    if (Bn0) {
+      TRACE(' - B has no 0 (and A must have) so morph to `R !^ A` because R=0 if A=0 and R>0 if A>0');
+      ml_vvv2vv(ml, offset, ML_XNOR, indexR, indexA);
       return;
     }
 
