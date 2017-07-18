@@ -640,7 +640,7 @@ ${varDeclsString}
 
         case ML_DEBUG:
           TRACE(' ! debug');
-          // dont send this to finitedomain; it wont know what to do with it
+          // dont send this to fdq; it wont know what to do with it
           let i = m2d_decA('<debug>');
           if (DEBUG) {
             part = '@custom noleaf ' + i + '\n';

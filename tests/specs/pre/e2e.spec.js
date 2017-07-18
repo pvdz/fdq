@@ -530,8 +530,8 @@ describe('specs/e2e.spec', function() {
   describe('regressions', function() {
 
     it('should not take forever to solve', function() {
-      // from finitedomain test case 'with viewport constants hardcoded'
-      // (its actually finitedomain itself that takes forever when solving this after being presolved)
+      // from fdq test case 'with viewport constants hardcoded'
+      // (it's actually fdq itself that takes forever when solving this after being presolved)
       let dsl = `
         # vars:
         : $7$ [1,1,3,3,5,5,9,9,12,12]

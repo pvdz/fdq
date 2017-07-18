@@ -12,9 +12,9 @@
 @ console.log('starting now...');
 @ var exports = {};
 @ var module = {exports: {}};
-+ http://localhost/path/to/finitedomain/dist/browser.js
-- http://localhost/path/to/finitedomain/tests/perf/curator/config.js
-- http://localhost/path/to/finitedomain/tests/perf/perf.js
++ http://localhost/path/to/fdq/dist/browser.js
+- http://localhost/path/to/fdq/tests/perf/curator/config.js
+- http://localhost/path/to/fdq/tests/perf/perf.js
 @ perf(config, 1);
 
  */

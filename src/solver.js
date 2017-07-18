@@ -650,7 +650,7 @@ class Solver {
    * (Used by PathSolver in a private project)
    * It will always create an array, never a "small domain"
    * (number that is bit-wise flags) because that should be
-   * kept an internal finitedomain artifact.
+   * kept an internal fdq artifact.
    *
    * @param {number[]} list
    * @returns {$arrdom[]}

@@ -1,10 +1,23 @@
-# Changelog for Finite Domain Solver (finitedomain)
+# Changelog for Finite Domain Quick Solver (fdq)
 
-## Unreleased
+## Unpublished
+
+- TODO: eliminate grid-specific required artifacts from the library, reduce api end points
 
 - Dropped exposed internal api `getDomain`. I can't tell why we needed this.
 - Dropped exposed api `offspring`, `propagate`, `checkStableSpace`, `createSpace`, `generateSolutions`, and `getTargetState`. IIRC they were leftovers from an experiment.
 - Added `Solver.dsl()` as a shorthand for creating a solver from dsl.
+- Support `: A, B 5` syntax in importer
+- Properly detect `A==?A` edge case
+- With preprocessor, support simple value strategies and propagate them to the solver
+- Don't throw if a var has more than 255 deps
+- Add rewrite tricks for `isAll` and `!^` (xnor)
+
+# fdq-fork
+
+I've forked `finitedomain` into `fdq`. This will reset the version number as releases are made.
+
+# Below change set before the `fdq` fork
 
 ## v3.0.0 (beta)
 

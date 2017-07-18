@@ -1,6 +1,6 @@
 
 // a domain, in this lib, is a set of numbers denoted by lo-hi range pairs (inclusive)
-// for memory and performance reasons finitedomain has three different representations for a domain;
+// for memory and performance reasons fdq has three different representations for a domain;
 // - arrdom: an array with number pairs. mostly used by external apis because its easier to deal with. GC sensitive.
 // - numdom: a 31bit field where each bit represents the inclusion of a value of its index (0 through 30). 31st bit unused
 // - strdom: each value of an arrdom encoded as a double 16bit character. fixed range size (4 characters).

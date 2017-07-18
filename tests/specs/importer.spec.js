@@ -187,7 +187,7 @@ let unitTests = [
   //'  - alias',
   //[
   //  'single alias',
-  //  // TODO: unable to test this as finitedomain currently doesn't really support this
+  //  // TODO: unable to test this as fdq currently doesn't really support this
   //  // for now just check that the parser doesnt blow up
   //  s => true,
   //  `

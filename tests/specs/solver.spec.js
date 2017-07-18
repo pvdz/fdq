@@ -2192,7 +2192,7 @@ describe('solver.spec', function() {
 
   describe('gss poc', function() {
 
-    it('with everything in finitedomain', function() {
+    it('with everything in fdq', function() {
 
       /*
 

@@ -1,5 +1,5 @@
 // NOTE: THIS IS NOT A GENERIC TRIE IMPLEMENTATION
-// It's specifically geared towards the use within finitedomain
+// It's specifically geared towards the use within fdq
 // Input strings are assumed to be limited to ascii 32-132
 
 import {
