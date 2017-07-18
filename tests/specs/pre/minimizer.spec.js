@@ -256,6 +256,56 @@ describe('specs/minimizer.spec', function() {
     });
   });
 
+  describe('xnor', function() {
+
+    it('should rewrite to eq if nonzero, both size=2, and same max', function() {
+      // since xnor means "either zero or nonzero"; when both domains have two elements
+      // and one is zero, if the non-zero is equal then the op is basically saying "both
+      // must be zero or the same non-zero" which means "eq".
+      let solution = Solver.pre(`
+        @custom var-strat throw
+        : A, B [0 1]
+        A !^ B
+        @custom noleaf A B
+      `);
+
+      expect(solution).to.eql({A: 0, B: 0});
+    });
+
+    it('should also eq for non-bool low domain', function() {
+      let solution = Solver.pre(`
+        @custom var-strat throw
+        : A, B [0 0 5 5] @max
+        A !^ B
+        @custom noleaf A B
+      `);
+
+      expect(solution).to.eql({A: 5, B: 5});
+    });
+
+    it('should also eq for non-bool high domain', function() {
+      let solution = Solver.pre(`
+        @custom var-strat throw
+        : A, B [0 0 100 100] @max
+        A !^ B
+        @custom noleaf A B
+      `);
+
+      expect(solution).to.eql({A: 100, B: 100});
+    });
+
+    it('should eliminate A!^A', function() {
+      let solution = Solver.pre(`
+        @custom var-strat throw
+        : A [0 1]
+        A !^ A
+        @custom noleaf A
+      `);
+
+      expect(solution).to.eql({A: [0, 1]});
+    });
+  });
+
   describe('islte', function() {
 
     it('should solve boolean constant case v1 (no cutter)', function() {

@@ -2352,6 +2352,20 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
       return;
     }
 
+    // A and B have a zero and a non-zero. if they are len=2 and have the same non-zero then they are essentially ==
+    if (A === B && domain_size(A) === 2) {
+      ASSERT(domain_size(B) === 2, 'If A==B and size(A)=2 then size(B) must also be 2');
+      TRACE(' - size(A)=2 and size(B)=2 and max(A)==max(B) so under XNOR: A==B');
+      if (indexA === indexB) {
+        TRACE('   - oh... it was the same index. removing op');
+        ml_eliminate(ml, offset, SIZEOF_VV);
+      } else {
+        addAlias(indexA, indexB);
+        varChanged = true;
+      }
+      return;
+    }
+
     TRACE(' - not only jumps...');
     onlyJumps = false;
     pc = offset + SIZEOF_VV;
