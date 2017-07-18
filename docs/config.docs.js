@@ -1,5 +1,5 @@
 /**
- * @private Do not read any property from this object outside of `finitedomain`. Expose required data on Solver instead.
+ * @private Do not read any property from this object outside of `fdq`. Expose required data on Solver instead.
  * @typedef {Object} $config
  * @property {string[]} allVarNames Should at the start of a search contain the names of _all_ vars. "varIndex" maps to this. space._vardoms maps 1:1 to this.
  * @property {$trie} _varNamesTrie

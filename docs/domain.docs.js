@@ -43,7 +43,7 @@
  * The soldom is a number with the most significant (31st) bit set and it
  * represents a solved domain. The value of the domain can be found in the first
  * 27bits of the value since that's the number of bits used by the highest value
- * that finitedomain supports in its domains.
+ * that fdq supports in its domains.
  *
  * A nordom represents a "normalized" domain, meaning the smallest representation
  * (with soldom<bitdom<strdom) and basically never an arrdom.

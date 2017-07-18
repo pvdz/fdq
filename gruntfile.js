@@ -30,8 +30,8 @@ module.exports = function () {
         cmd: 'node_modules/.bin/js-beautify',
         args: [
           '-s 4',
-          '-f', 'build/finitedomain-es5.js',
-          '-o', 'build/finitedomain-es5-beautified.js',
+          '-f', 'build/fdq-es5.js',
+          '-o', 'build/fdq-es5-beautified.js',
         ],
       },
     },
@@ -59,7 +59,7 @@ module.exports = function () {
       },
       concat: {
         files: {
-          'build/finitedomain-es5.js': ['build/finitedomain.es6.concat.js'],
+          'build/fdq-es5.js': ['build/fdq.es6.concat.js'],
         },
       },
     },
@@ -173,7 +173,6 @@ module.exports = function () {
             // Include browserified dependency builds
             // Target the file name directly with absolute path (-> __dirname)
             __dirname + '/node_modules/gom/browser/gom.js',
-            __dirname + '/node_modules/@the-grid/multiversejson/browser/Multiverse.js',
 
             // Note: This doesn't work properly in browserify yet but it may just be what we want.
             //       However in that case we should allow chai for phantomjs builds
@@ -190,7 +189,7 @@ module.exports = function () {
       },
       phantom: {
         files: {
-          'dist/finitedomain.dev.js': 'src/index.js',
+          'dist/fdq.dev.js': 'src/index.js',
           // note: this will include chai and mocha and all that but that's fine (I think?) and workarounds are difficult with es6 static modules anyways
           'build/specs-browserified.js': 'tests/specs/**/*.spec.js',
         },
@@ -208,7 +207,7 @@ module.exports = function () {
           sourceMap: true,
         },
         files: {
-          'dist/finitedomain.dist.min.js': ['build/finitedomain-es5.js'],
+          'dist/fdq.dist.min.js': ['build/fdq-es5.js'],
         },
       },
     },
@@ -232,7 +231,7 @@ module.exports = function () {
           },
         },
         files: {
-          'build/finitedomain.es6.concat.js': ['src/**/*'],
+          'build/fdq.es6.concat.js': ['src/**/*'],
         },
       },
       test: {
@@ -251,7 +250,7 @@ module.exports = function () {
           },
         },
         files: {
-          'build/finitedomain.es6.concat.js': ['src/**/*'],
+          'build/fdq.es6.concat.js': ['src/**/*'],
         },
       },
     },
@@ -307,12 +306,12 @@ module.exports = function () {
 
   grunt.registerTask('concat-dist-to-browserjs', function() {
     console.log('- Copying dist to browser.js');
-    grunt.file.copy('dist/finitedomain.dist.min.js', 'dist/browser.js');
+    grunt.file.copy('dist/fdq.dist.min.js', 'dist/browser.js');
   });
   grunt.registerTask('concat-bug-to-browserjs', function() {
     console.log('- Copying build to browser.js');
-    grunt.file.copy('build/finitedomain-es5-beautified.js', 'dist/browser.js');
-    grunt.file.copy('build/finitedomain-es5-beautified.js', 'dist/finitedomain.dist.min.js');
+    grunt.file.copy('build/fdq-es5-beautified.js', 'dist/browser.js');
+    grunt.file.copy('build/fdq-es5-beautified.js', 'dist/fdq.dist.min.js');
   });
 
   grunt.registerTask('clean', ['remove']);

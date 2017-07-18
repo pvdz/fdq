@@ -6,7 +6,7 @@
  * @property {number} updatedVarIndex=-1 varIndex that was updated when creating this space (-1 for root)
  * @property {number} _lastChosenValue=-1 The value selected in the previous choice in the value distributor
  *
- * A Space is basically a search node in the search graph that finitedomain excavates.
+ * A Space is basically a search node in the search graph that fdq excavates.
  * It has a central config which contains all the variables and some initialization
  * data for the root space (-> start of the search) as well as generated
  * precomputations derived from the config (var indexes and so forth).

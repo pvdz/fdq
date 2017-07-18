@@ -1,12 +1,12 @@
 {
-  "name": "finitedomain",
-  "main": "./dist/finitedomain.dist.min.js",
+  "name": "fdq",
+  "main": "./dist/fdq.dist.min.js",
   "description": "A fast feature rich finite domain solver",
   "license": "MIT",
-  "version": "3.0.0",
+  "version": "0.0.1",
   "repository": {
     "type": "git",
-    "url": "git://github.com/the-grid/finitedomain.git"
+    "url": "git://github.com/qfox/fdq.git"
   },
   "scripts": {
     "install": "bin/create-git-hooks.sh",

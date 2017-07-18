@@ -1,15 +1,17 @@
-# finitedomain [![Build Status](https://travis-ci.org/the-grid/finitedomain.svg?branch=master)](https://travis-ci.org/the-grid/finitedomain)
+# FDQ
 
-Finite domain [constraint solver](https://en.wikipedia.org/wiki/Constraint_logic_programming), originally based on [FD.js](https://github.com/srikumarks/FD.js/wiki/API).
+A finite domain quick [constraint solver](https://en.wikipedia.org/wiki/Constraint_logic_programming), forked from [finitedomain](https://github.com/the-grid/finitedomain), which in turn was originally based on [FD.js](https://github.com/srikumarks/FD.js/wiki/API).
 
-This is very much a WIP.
+This is my personal fork of the finitedomain library from when I stopped working on it.
+
+This is very much a WIP but not very actively maintained.
 
 API is bound to change, consider yourself warned.
 
 ## Installing
 
 ```
-npm install finitedomain
+todo :)
 ```
 
 ## Usage
@@ -17,7 +19,7 @@ npm install finitedomain
 Find all numbers between 10 and 20 that are bigger than 14 and smaller than 17 and not 16. Contrived? Nah.
 
 ```es6
-import Solver from 'finitedomain';
+import Solver from 'fdq';
 
 let solver = new Solver();
 
@@ -33,7 +35,7 @@ console.log(solver.solutions); // -> [{A: 15}]
 Or with a DSL:
 
 ```es6
-import Solver from 'finitedomain';
+import Solver from 'fdq';
 
 let solver = new Solver().imp(`
   : A [10 20]
