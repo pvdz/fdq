@@ -305,7 +305,7 @@ ${varDeclsString}
 
       let s = valueOrName(a, vA) + ' ' + op + ' ' + valueOrName(b, vB);
       s += ' '.repeat(Math.max(45 - s.length, 3));
-      s += '# ' + domainstr(A, vA) + ' ' + op + ' ' + domainstr(b, vB);
+      s += '# ' + domainstr(A, vA) + ' ' + op + ' ' + domainstr(B, vB);
       s += ' '.repeat(Math.max(110 - s.length, 3));
       s += '# args: ' + a + ', ' + b;
       s += ' '.repeat(Math.max(150 - s.length, 3));
