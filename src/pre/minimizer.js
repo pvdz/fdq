@@ -810,6 +810,7 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
     TRACE(' - Only one arg remaining; morphing to a XNOR');
     let index = readIndex(ml, offsetArgs);
     ml_cr2vv(ml, offset, argCount, ML_XNOR, indexR, index);
+    varChanged = true; // the xnor may need optimization
   }
 
   function min_isAll2(ml, offset) {
@@ -832,6 +833,7 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
     if (domain_isZero(R)) {
       TRACE(' - R is 0 so morph to nand and revisit');
       ml_vvv2vv(ml, offset, ML_NAND, indexA, indexB);
+      varChanged = true;
       return;
     }
 
@@ -871,11 +873,13 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
     if (An0) {
       TRACE(' - A has no 0 (and B must have) so morph to `R !^ B` because R=0 if B=0 and R>0 if B>0');
       ml_vvv2vv(ml, offset, ML_XNOR, indexR, indexB);
+      varChanged = true;
       return;
     }
     if (Bn0) {
       TRACE(' - B has no 0 (and A must have) so morph to `R !^ A` because R=0 if A=0 and R>0 if A>0');
       ml_vvv2vv(ml, offset, ML_XNOR, indexR, indexA);
+      varChanged = true;
       return;
     }
 
@@ -1188,6 +1192,7 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
         TRACE(' -', nameX, '=0 so ', nameY, '0==R, rewriting op to eq');
         // rewrite to Y == R
         ml_vvv2vv(ml, offset, ML_EQ, indexR, indexY);
+        varChanged = true;
         return true;
       }
 
@@ -1197,6 +1202,7 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
         // B = R ==? A or B = R !=? A, that depends on max(R)==A
         TRACE(' -', nameX + '>0, ' + nameY + '<=1, size(R)=2. Morphing to iseq: ', (domain_max(R) === vX ? nameY + ' = R ==? ' + nameX : nameY + ' = R !=? ' + nameX), '->', domain__debug(Y), '=', domain__debug(R), (domain_max(R) === vX ? '==?' : '!=?'), vX);
         ml_vvv2vvv(ml, offset, domain_max(R) === vX ? ML_ISEQ : ML_ISNEQ, indexR, indexX, indexY);
+        varChanged = true;
         return true;
       }
 
@@ -1204,6 +1210,7 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
         // A = R ==? B or A = R !=? B, that depends on max(B)==A
         TRACE(' - ' + nameX + ' > 0 R <= 1 and size(' + nameY + ')=2. Morphing to iseq: ', (maxB === vX ? 'R = B ==? A' : 'R = B !=? A'), '->', domain__debug(R), '=', domain__debug(Y), (maxB === vX ? '==?' : '!=?'), vX);
         ml_vvv2vvv(ml, offset, maxB === vX ? ML_ISEQ : ML_ISNEQ, indexY, indexX, indexR);
+        varChanged = true;
         return true;
       }
     }
@@ -1265,9 +1272,11 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
     } else if (domain_getValue(A) === 0) { // maxA==0
       TRACE(' - A=0 so B==R, rewriting op to eq');
       ml_vvv2vv(ml, offset, ML_EQ, indexB, indexR);
+      varChanged = true;
     } else if (domain_getValue(B) === 0) { // maxB==0
       TRACE(' - B=0 so A==R, rewriting op to eq');
       ml_vvv2vv(ml, offset, ML_EQ, indexA, indexR);
+      varChanged = true;
     } else {
       TRACE(' - not only jumps...');
       onlyJumps = false;
@@ -1448,12 +1457,14 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
     if (domain_isZero(R)) {
       TRACE(' ! R=0 while A or B isnt solved, changing iseq to neq and revisiting');
       ml_vvv2vv(ml, offset, ML_NEQ, indexA, indexB);
+      varChanged = true;
       return;
     }
 
     if (domain_hasNoZero(R)) {
       TRACE(' ! R>=1 while A or B isnt solved, changing iseq to eq and revisiting');
       ml_vvv2vv(ml, offset, ML_EQ, indexA, indexB);
+      varChanged = true;
       return;
     }
 
@@ -1483,6 +1494,7 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
         // - A=0: 0==A=1, 1==A=0: B!=R
         // - A=1: 0==A=0, 1==A=1: B==R
         ml_vvv2vv(ml, offset, vA === 0 ? ML_NEQ : ML_EQ, indexB, indexR);
+        varChanged = true;
         return;
       }
 
@@ -1492,6 +1504,7 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
         // - B=0: 0==B=1, 1==B=0: A!=R
         // - B=1: 0==B=0, 1==B=1: A==R
         ml_vvv2vv(ml, offset, vB === 0 ? ML_NEQ : ML_EQ, indexA, indexR);
+        varChanged = true;
         return;
       }
 
@@ -1501,6 +1514,7 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
           // [0,1] = [0,0, vB,vB] ==? vB    ->   (R=0 & A=0) | (R=1 & A=vB)  --> XNOR
           TRACE(' ! [01]=[00xx]==?x so morphing to XNOR and revisiting');
           ml_vvv2vv(ml, offset, ML_XNOR, indexA, indexR);
+          varChanged = true;
           return;
         }
       }
@@ -1510,6 +1524,7 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
           // [0,1] = [0,0, vB,vB] ==? vB    ->   (R=0 & A=0) | (R=1 & A=vB)  --> XNOR
           TRACE(' ! [01]=x==?[00xx] so morphing to XNOR and revisiting');
           ml_vvv2vv(ml, offset, ML_XNOR, indexB, indexR);
+          varChanged = true;
           return;
         }
       }
@@ -1556,12 +1571,14 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
     if (domain_isZero(R)) {
       TRACE(' ! R=0, changing isneq to eq and revisiting');
       ml_vvv2vv(ml, offset, ML_EQ, indexA, indexB);
+      varChanged = true;
       return;
     }
 
     if (domain_hasNoZero(R)) {
       TRACE(' ! R>0, changing isneq to neq and revisiting');
       ml_vvv2vv(ml, offset, ML_NEQ, indexA, indexB);
+      varChanged = true;
       return;
     }
 
@@ -1601,12 +1618,14 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
     if (domain_isZero(R)) {
       TRACE(' ! result var solved to 0 so compiling an lte with swapped args in its place', indexB, 'and', indexA);
       ml_vvv2vv(ml, offset, ML_LTE, indexB, indexA);
+      varChanged = true;
       return;
     }
 
     if (domain_hasNoZero(R)) {
       TRACE(' ! result var solved to 1 so compiling an lt in its place for', indexA, 'and', indexB);
       ml_vvv2vv(ml, offset, ML_LT, indexA, indexB);
+      varChanged = true;
       return;
     }
 
@@ -1650,12 +1669,14 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
     if (falsyR) {
       TRACE(' ! result var solved to 0 so compiling an lt with swapped args in its place', indexB, 'and', indexA);
       ml_vvv2vv(ml, offset, ML_LT, indexB, indexA);
+      varChanged = true;
       return;
     }
 
     if (truthyR) {
       TRACE(' ! result var solved to 1 so compiling an lte in its place', indexA, 'and', indexB);
       ml_vvv2vv(ml, offset, ML_LTE, indexA, indexB);
+      varChanged = true;
       return;
     }
 
@@ -1668,16 +1689,19 @@ function min_optimizeConstraints(ml, problem, domains, names, firstRun, once) {
       if (domain_isBool(A) && domain_isZero(B)) {
         TRACE(' - [01] = [01] <=? 0; morphing to A != R');
         ml_vvv2vv(ml, offset, ML_NEQ, indexA, indexR);
+        varChanged = true;
         return;
       }
       if (domain_isBool(A) && B === domain_createValue(1)) {
         TRACE(' - [01] = [01] <=? 1; morphing to A == R');
         ml_vvv2vv(ml, offset, ML_EQ, indexA, indexR);
+        varChanged = true;
         return;
       }
       if (A === domain_createValue(1) && domain_isBool(B)) {
         TRACE(' - [01] = 1 <=? [01]; morphing to B == R');
         ml_vvv2vv(ml, offset, ML_EQ, indexB, indexR);
+        varChanged = true;
         return;
       }
     }
