@@ -44,8 +44,7 @@ module.exports = function () {
 })();
 export default FDQ;
           `,
-          //sourceMap: true,
-          //sourceMapStyle: 'inline', // embed link inline
+          sourceMap: false,
           process: function(code, path){
             if (path === 'src/index.js') return '';
             console.log('concatting', path);

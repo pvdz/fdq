@@ -3,7 +3,7 @@
   "main": "./dist/fdq.dist.min.js",
   "description": "Finite Domain reduction system and solver by qFox",
   "license": "MIT",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "repository": {
     "type": "git",
     "url": "git://github.com/qfox/fdq.git"
@@ -25,7 +25,6 @@
     "sourceMap": true
   },
   "dependencies": {
-    "fdlib": "*"
   },
   "devDependencies": {
     "babel-cli": "*",
