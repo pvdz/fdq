@@ -18,6 +18,17 @@ let solution = FDQ.solve(`
 log(solution); // -> {A: 0, B: 1, C: 1}
 ```
 
+## Examples
+
+There is a REPL (online web-based playground) available: [https://qfox.github.io/fdq/examples/playground.html](https://qfox.github.io/fdq/examples/playground.html)
+
+Some examples:
+
+- [Sudoku solver](https://qfox.github.io/fdq/examples/sudoku.html)
+- [Battleships solver](https://qfox.github.io/fdq/examples/battleships.html)
+- [Tree-Tent solver](https://qfox.github.io/fdq/examples/treetent.html)
+- [Hitori solver (wip)](https://qfox.github.io/fdq/examples/hitori.html)
+
 ## Development
 
 To set up a development environment create a main project dir. Inside it clone the following repos:

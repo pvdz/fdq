@@ -204,7 +204,7 @@
   ></script>
   <script>
     // https://www.gmpuzzles.com/blog/tag/battleships-2/
-    if (typeof Solver === 'undefined') {
+    if (typeof FDQ === 'undefined') {
       console.error('Did not load library. Fix file and refresh.');
     }
 
@@ -319,7 +319,7 @@
 
       let start = Date.now();
       let disabled = $timeout.checked;
-      let optionsFD = {
+      let optionsFdo = {
         log: 0,
         max: 1,
         beforeSpace: s => {
@@ -331,7 +331,7 @@
           return false;
         },
       };
-      let optionsPre = {
+      let optionsFdp = {
         log: 0,
         printDslAfter: s => console.log(s),
       };
@@ -386,21 +386,13 @@
 
       // give UI time to update
       setTimeout(() => {
-        if ($pre.checked) {
-          let t = Solver.pre(problem, optionsPre, optionsFD);
-          $output.value = JSON.stringify(t).replace(/"/g, '');
-          if (t === false) {
-            $puzzle.style.backgroundColor = 'lightpink';
-          } else {
-            $puzzle.style.backgroundColor = 'lightgreen';
-            for (let id in t) if (id[0] === '$' && id.length === 3) setInput(id, t[id]);
-          }
+        let t = $pre.checked ? FDQ.solve(problem, optionsFdp, optionsFdo) : FDQ.FDO.solve(problem, optionsFdo);
+        $output.value = JSON.stringify(t).replace(/"/g, '');
+        if (typeof t === 'string') {
+          $puzzle.style.backgroundColor = 'lightpink';
         } else {
-          let s = Solver.dsl(problem);
-          s.solve(optionsFD);
-          let t = s.solutions;
-          $output.value = JSON.stringify(t).replace(/"/g, '');
-          for (let id in t[0]) if (id[0] === '$' && id.length === 3) setInput(id, t[id]);
+          $puzzle.style.backgroundColor = 'lightgreen';
+          for (let id in t) if (id[0] === '$' && id.length === 3) setInput(id, t[id]);
         }
       }, 10);
     };

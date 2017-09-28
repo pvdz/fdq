@@ -78,7 +78,7 @@
     "
   ></script>
   <script>
-    if (typeof Solver === 'undefined') {
+    if (typeof FDQ === 'undefined') {
       console.error('Did not load library. Fix file and refresh.');
     }
 
@@ -139,12 +139,12 @@
       $output.value = '';
 
       let start = Date.now();
-      let optionsFD = {
+      let optionsFdo = {
         log: 0,
         max: 1,
         beforeSpace: s => Date.now() - start > 5000, // 5s timeout
       };
-      let optionsPre = {
+      let optionsFdp = {
         log: 0,
       };
 
@@ -155,21 +155,12 @@
       let problem = dsl + fixed.join('\n');
       $input.value = problem.split(/\n/g).map(line => line.trim()).join('\n');
 
-      if ($pre.checked) {
-        let t = Solver.pre(problem, optionsPre, optionsFD);
-        $output.value = JSON.stringify(t).replace(/"/g, '');
-        if (t === false) {
-          $puzzle.style.backgroundColor = 'lightpink';
-        } else {
-          $puzzle.style.backgroundColor = 'lightgreen';
-          for (let id in t) window[id].value = t[id];
-        }
+      let solution = $pre.checked ? FDQ.solve($input.value, optionsFdp, optionsFdo) : FDQ.FDO.solve($input.value, optionsFdo);
+      if (typeof solution === 'string') {
+        $puzzle.style.backgroundColor = 'lightpink';
       } else {
-        let s = Solver.dsl(problem);
-        s.solve(optionsFD);
-        let t = s.solutions;
-        $output.value = JSON.stringify(t).replace(/"/g, '');
-        for (let id in t[0]) if (id[0] === '$') window[id].value = t[0][id];
+        $puzzle.style.backgroundColor = 'lightgreen';
+        for (let id in solution) window[id].value = solution[id];
       }
     };
 

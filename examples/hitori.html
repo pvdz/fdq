@@ -142,7 +142,7 @@
     "
   ></script>
   <script>
-    if (typeof FDO === 'undefined') {
+    if (typeof FDQ === 'undefined') {
       console.error('Did not load library. Fix file and refresh.');
     }
 
@@ -408,7 +408,7 @@
 
       let start = Date.now();
       let disabled = $timeout.checked;
-      let optionsFD = {
+      let optionsFdo = {
         log: 1,
         max: 1,
         beforeSpace: s => {
@@ -420,7 +420,7 @@
           return false;
         },
       };
-      let optionsPre = {
+      let optionsFdp = {
         log: 1,
         debugDsl: true,
         indexNames: false,
@@ -442,20 +442,9 @@
 
       // give UI time to update
       setTimeout(() => {
-        let solution;
-        if ($pre.checked) {
-          let t = FDO.pre(problem, optionsPre, optionsFD);
-          solution = t;
-        } else {
-          let s = FDO.dsl(problem);
-          s.solve(optionsFD);
-          let t = s.solutions;
-          if (t.length === 0) solution = false;
-          else solution = t[0];
-        }
+        let solution = $pre.checked ? FDQ.solve(problem, optionsFdp, optionsFdo) : FDQ.FDO.solve(problem, optionsFdo);
         $output.value = JSON.stringify(solution).replace(/"/g, '');
-        if (solution === false) {
-      console.log('wok?')
+        if (typeof solution === 'string') {
           $puzzle.style.backgroundColor = 'lightpink';
         } else {
           [...document.querySelectorAll('.inputs input')].forEach(inp => {

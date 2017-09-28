@@ -16,7 +16,7 @@
     <label title="solve immediately after lib loads?" style="cursor: help;">
       <input id=$solve_onload type="checkbox" checked>solve onload
     </label><br>
-    <label title="use Solver.dsl().solve() or Solver.pre() ?" style="cursor: help;">
+    <label title="use FDQ.solve() or FDQ.FDO.solve() ?" style="cursor: help;">
       <input id=$pre type="checkbox" checked>pre-solve
     </label><br>
     <br>
@@ -149,9 +149,9 @@ diff(c19 c29 c39 c49 c59 c69 c79 c89 c99)
       <label><input type="radio" name="bebug" checked> none for FD</label><br>
       <label style="cursor: help;" title="simple fd debug stuff"><input type="radio" name="bebug" id=$fd_tostring> _tostring</label><br>
       <label style="cursor: help;" title="extended debug output"><input type="radio" name="bebug" id=$fd_debug> _debug</label><br>
-      <label style="cursor: help;" title="debug the solver config after generating it"><input type="radio" name="bebug" id=$fd_debugconfig> _debugConfig</label><br>
+      <label style="cursor: help;" title="debug the FDO config after generating it"><input type="radio" name="bebug" id=$fd_debugconfig> _debugConfig</label><br>
       <label style="cursor: help;" title="debug the first space after generating it"><input type="radio" name="bebug" id=$fd_debugspace> _debugSpace</label><br>
-      <label style="cursor: help;" title="debug the solver"><input type="radio" name="bebug" id=$fd_debugsolver> _debugSolver</label><br>
+      <label style="cursor: help;" title="debug FDO"><input type="radio" name="bebug" id=$fd_debugsolver> _debugSolver</label><br>
     </div>
     <div style="float: left; margin-right: 10px;">
       <label style="cursor: help;" title="print the dsl at all?"><input type="checkbox" id=$pre_tostring checked> show between dsl</label><br>
@@ -196,7 +196,7 @@ diff(c19 c29 c39 c49 c59 c69 c79 c89 c99)
     "
   ></script>
   <script>
-    if (typeof FDO === 'undefined') {
+    if (typeof FDQ === 'undefined') {
       console.error('Did not load library. Fix file and refresh.');
     }
     let logs = [];
@@ -219,7 +219,7 @@ diff(c19 c29 c39 c49 c59 c69 c79 c89 c99)
       time: _ => _,
       timeEnd: _ => _,
     };
-    FDO.setTerm(term);
+    FDQ.setTerm(term);
 
     $solve.onclick = function(){
       $between.value = '';
@@ -228,7 +228,7 @@ diff(c19 c29 c39 c49 c59 c69 c79 c89 c99)
       logs = [];
 
       let start = Date.now();
-      let optionsFD = {
+      let optionsFdo = {
         log: $log0.checked ? 0 : $log1.checked ? 1 : $log2.checked ? 2 : NaN,
         logger: (...args) => term.log(...args),
         _debug: $fd_debug.checked ? true : false,
@@ -239,7 +239,7 @@ diff(c19 c29 c39 c49 c59 c69 c79 c89 c99)
         beforeSpace: s => Date.now() - start > 5000, // 5s timeout
 //        afterSpace: s => true,
       };
-      let optionsPre = {
+      let optionsFdp = {
         log: 1,
         debugDsl: !!$debugdsl.checked,
         indexNames: !!$indexnames.checked,
@@ -247,17 +247,8 @@ diff(c19 c29 c39 c49 c59 c69 c79 c89 c99)
         groupedConstraints: !!$groupedconstraints.checked,
         printDslAfter: $pre_tostring.checked ? s => $between.value += s + '\n\n' : false,
       };
-      if ($pre.checked) {
-        term.warn('Solver.pre:');
-        let t = FDO.pre($input.value, optionsPre, optionsFD);
-        $output.value = JSON.stringify(t).replace(/"/g, '');
-      } else {
-        term.warn('Solver.dsl:');
-        let s = FDO.dsl($input.value);
-        s.solve(optionsFD);
-        let t = s.solutions;
-        $output.value = JSON.stringify(t).replace(/"/g, '');
-      }
+      let solution = $pre.checked ? FDQ.solve($input.value, optionsFdp, optionsFdo) : FDQ.FDO.solve($input.value, optionsFdo);
+      $output.value = JSON.stringify(solution).replace(/"/g, '');
     };
     if ($solve_onload.checked) $solve.onclick();
   </script>

@@ -39,6 +39,7 @@ module.exports = function () {
     FDO,
     FDP,
     solve: (dsl, fdpOptions, fdoOptions) => FDP.solve(dsl, FDO.solve, fdpOptions, fdoOptions),
+    setTerm,
   };
   return FDQ;
 })();
@@ -73,6 +74,7 @@ let FDQ = {
   FDO,
   FDP,
   solve: (dsl, fdpOptions, fdoOptions) => FDP.solve(dsl, FDO.solve, fdpOptions, fdoOptions),
+  setTerm,
 };
 export default FDQ;
           `,
@@ -317,10 +319,11 @@ export default FDQ;
 
   grunt.registerTask('clean', ['remove']);
   grunt.registerTask('build', 'just clean and concat the sources without post processing', ['clean', 'concat:build', 'babel:concat']);
+
   grunt.registerTask('dist', 'lint, build, minify, test', ['clean', 'run:lint', 'build', 'uglify:dist', 'concat-dist-to-fdqjs', 'mochaTest:failfast']);
-  grunt.registerTask('distq', 'create dist (inc fdq.js) without testing', ['build', 'uglify:test', 'concat-dist-to-fdqjs']);
-  grunt.registerTask('distbug', 'create dist for debugging, keeps asserts and traces', ['clean', 'concat:test', 'babel:concat', 'run:jsbeautify', 'concat-bug-to-fdqjs']);
-  grunt.registerTask('distheat', 'create dist for heatmap inspection, no asserts', ['build', 'run:jsbeautify', 'concat-bug-to-fdqjs']);
+  grunt.registerTask('distq', 'create dist (inc sourcemaps and fdq.js) without testing', ['build', 'uglify:test', 'concat-dist-to-fdqjs']);
+  grunt.registerTask('distbug', 'create dist (inc sourcemaps and fdq.js) for debugging, keeps asserts and traces', ['clean', 'concat:test', 'babel:concat', 'concat-bug-to-fdqjs']);
+  grunt.registerTask('distheat', 'create dist (inc sourcemaps and fdq.js) for heatmap inspection, no asserts', ['build', 'run:jsbeautify', 'concat-bug-to-fdqjs']);
 
   grunt.registerTask('test', 'lint then test', ['clean', 'run:lintdev', 'build', 'uglify:dist', 'concat-dist-to-fdqjs', 'mochaTest:failfast']);
 
