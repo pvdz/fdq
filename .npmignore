@@ -1,0 +1,7 @@
+# disallow anything except for src and build
+# (readme, changelog, packagejson are always included)
+*
+*/
+
+!src/**/*
+!dist/fdq.dist.min.js

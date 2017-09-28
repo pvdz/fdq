@@ -1,0 +1,19 @@
+.DS_Store
+
+# Logs
+logs
+*.log
+
+# Runtime data
+build
+dist
+tests/result.xml
+
+# Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
+.grunt
+
+# Dependency directory
+node_modules
+
+# Users Environment Variables
+.lock-wscript

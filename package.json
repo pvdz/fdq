@@ -1,0 +1,62 @@
+{
+  "name": "fdq",
+  "main": "./dist/fdq.dist.min.js",
+  "description": "Finite Domain reduction system and solver by qFox",
+  "license": "MIT",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/qfox/fdq.git"
+  },
+  "scripts": {
+    "install": "bin/create-git-hooks.sh",
+    "test": "bin/lint.prod.sh && bin/mocha.sh",
+    "prepublishOnly": "grunt dist",
+    "lint": "bin/lint.prod.sh",
+    "lintdev": "bin/lint.dev.sh",
+    "lintfix": "bin/lint.fix.sh",
+    "mocha": "bin/mocha.sh",
+    "coverage": "bin/coverage.sh"
+  },
+  "babel": {
+    "presets": [
+      "es2015"
+    ],
+    "sourceMap": true
+  },
+  "dependencies": {
+    "fdlib": "*"
+  },
+  "devDependencies": {
+    "babel-cli": "*",
+    "babel-core": "*",
+    "babel-eslint": "*",
+    "babel-polyfill": "*",
+    "babel-preset-es2015": "*",
+    "babelify": "*",
+    "chai": "*",
+    "eslint": "*",
+    "grunt": "*",
+    "grunt-babel": "*",
+    "grunt-cli": "*",
+    "grunt-contrib-concat": "*",
+    "grunt-contrib-uglify": "*",
+    "grunt-contrib-watch": "*",
+    "grunt-mocha-test": "*",
+    "grunt-remove": "*",
+    "grunt-replace": "*",
+    "grunt-run": "*",
+    "js-beautify": "*",
+    "mocha": "*"
+  },
+  "keywords": [
+    "constraint solving",
+    "GSAT",
+    "finite domain solver",
+    "FD",
+    "Reduction system",
+    "Minifier",
+    "Logic",
+    "Deduction"
+  ]
+}

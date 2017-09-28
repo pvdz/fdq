@@ -1,0 +1,468 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+  <style>
+    .hintx,
+    .hinty,
+    .puzzle,
+    .control,
+    .input,
+    .output {
+      float: left;
+      margin-right: 10px;
+    }
+    .puzzle {
+
+    }
+    .hintx input,
+    .hinty input,
+    .puzzle input {
+      position: relative;
+      width: 50px;
+      height: 50px;
+      float: left;
+      border: 1px solid green;
+      border-width: 1px 1px 0 0;
+      text-align: center;
+      line-height: 50px;
+      font-size: 30px;
+      background-color: transparent;
+      overflow: hidden;
+    }
+    .hinty input {
+      clear: both;
+      border: 1px solid black;
+      border-bottom: 0;
+    }
+    .hinty input:last-child {
+      border: 1px solid black;
+    }
+    .hintx input {
+      border: 1px solid black;
+      border-left: 0;
+    }
+    .hintx .ohforgetit {
+      border: 1px solid black;
+    }
+    .puzzle input:hover { background-color: yellow; }
+    .puzzle .st { border-top: 2px solid black; }
+    .puzzle .sr { border-right: 2px solid black; }
+    .puzzle .sb { border-bottom: 2px solid black; }
+    .puzzle .sl { border-left: 2px solid black; }
+    .puzzle .s { clear: left; }
+    .puzzle input[data-value="0"] {
+      background-color: lightblue; /* look I'd use navy, but really... */
+     }
+    .puzzle input[data-value="1"] {
+      background:
+        linear-gradient(0deg, transparent 80%, lightblue 37%),
+        linear-gradient(180deg, transparent 80%, lightblue 37%),
+        linear-gradient(to left, orange, orange);
+     }
+    .puzzle input[data-value="2"] {
+      background:
+        linear-gradient(-90deg, transparent 80%, lightblue 37%),
+        linear-gradient(90deg, transparent 80%, lightblue 37%),
+        linear-gradient(to left, orange, orange);
+     }
+    .puzzle input[data-value="3"] {
+      background:
+        linear-gradient(60deg, transparent 65%, lightblue 37%),
+        linear-gradient(-60deg, transparent 65%, lightblue 37%),
+        linear-gradient(to bottom, orange, orange);
+     }
+    .puzzle input[data-value="4"] {
+      background:
+        linear-gradient(150deg, transparent 65%, lightblue 37%),
+        linear-gradient(30deg, transparent 65%, lightblue 37%),
+        linear-gradient(to left, orange, orange);
+     }
+    .puzzle input[data-value="5"] {
+      background:
+        linear-gradient(240deg, transparent 65%, lightblue 37%),
+        linear-gradient(120deg, transparent 65%, lightblue 37%),
+        linear-gradient(to top, orange, orange);
+     }
+    .puzzle input[data-value="6"] {
+      background:
+        linear-gradient(330deg, transparent 65%, lightblue 37%),
+        linear-gradient(210deg, transparent 65%, lightblue 37%),
+        linear-gradient(to right, orange, orange);
+     }
+    .puzzle input[data-value="7"] {
+      background: radial-gradient(ellipse at center, orange 60%,lightblue 60%);
+    }
+    .puzzle input[data-value="8"] {
+      background:
+        linear-gradient(330deg, transparent 100%, lightblue 37%),
+        linear-gradient(210deg, transparent 100%, lightblue 37%),
+        linear-gradient(to right, orange, orange);
+     }
+  </style>
+  <p>Battleships solver (<a href="http://www.conceptispuzzles.com/index.aspx?uri=puzzle/battleships/techniques" target="_blank">explanation of puzzle</a>). Solving in <a href="https://github.com/qfox/fdq" target="_blank">fdq</a>. By Peter van der Zee, &copy; <a href="http://qfox.nl" target="_blank">qfox.nl</a>, September 2017.</p>
+  <p>Given a 10x10 grid, fit some ships of certain sizes and make sure they don't touch each other, not even diagonally. Numbers to the side indicate how many boat pieces occur in that row or column.</p>
+  <p>Cell value legend: 0=water, 1=horizontal mid section, 2=vertical mid-section, 8=1 or 2, 3=top of vertical boat, 4=right of horizontal boat, 5=bottom of vertical boat, 6=left of vertical boat, 7=1x1 boat. Press load buttons for examples:)</p>
+  <p id=$loading>(Trying to load library)</p>
+  <div style="overflow: auto;">
+    <div class="control">
+      <button id=$solve>Solve</button> <button id=$clear>Clear</button><br>
+      <br>
+      <label><input type="checkbox" id=$timeout checked onchange="this.parentNode.style.color = this.checked?'inherit':'red'"> Timeout protection</label><br>
+      <br>
+      <button id=$load1>Load 1</button> <button id=$load2>Load 2</button> <button id=$load3>Load 3</button>
+      <br>
+      <br>
+      <label><input type="radio" name=how id=$pre checked> reduce constraints first</label><br>
+      <!--FD doesnt support this syntax yet <label><input type="radio" name=how> brute force solve</label><br>-->
+      <br>
+      <br>
+      Required boat counts:<br>
+      <br>
+      - <input style="width: 30px; text-align: center;" value="4" id=$boats1> &#11044;<br>
+      - <input style="width: 30px; text-align: center;" value="3" id=$boats2> &#9664; &#9654;<br>
+      - <input style="width: 30px; text-align: center;" value="2" id=$boats3> &#9664; &#9724; &#9654;<br>
+      - <input style="width: 30px; text-align: center;" value="1" id=$boats4> &#9664; &#9724; &#9724; &#9654;<br>
+    </div>
+
+    <div style="float: left;" id=$inputs class="inputs">
+      <div id=$hinty class="hinty">
+        <input id=$hy1>
+        <input id=$hy2>
+        <input id=$hy3>
+        <input id=$hy4>
+        <input id=$hy5>
+        <input id=$hy6>
+        <input id=$hy7>
+        <input id=$hy8>
+        <input id=$hy9>
+        <input id=$hya>
+      </div>
+      <div id=$puzzle class="puzzle">
+        <input id=$11 title="1 x 1" class="s st sl"><input id=$21 title="2 x 1" class="st"><input id=$31 title="3 x 1" class="st"><input id=$41 title="4 x 1" class="st"><input id=$51 title="5 x 1" class="st"><input id=$61 title="6 x 1" class="st"><input id=$71 title="7 x 1" class="st"><input id=$81 title="8 x 1" class="st"><input id=$91 title="9 x 1" class="st"><input id=$a1 title="a x 1" class="st sr">
+        <input id=$12 title="1 x 2" class="s sl"><input id=$22 title="2 x 2"><input id=$32 title="3 x 2"><input id=$42 title="4 x 2"><input id=$52 title="5 x 2"><input id=$62 title="6 x 2"><input id=$72 title="7 x 2"><input id=$82 title="8 x 2"><input id=$92 title="9 x 2"><input id=$a2 title="a x 2" class="sr">
+        <input id=$13 title="1 x 3" class="s sl"><input id=$23 title="2 x 3"><input id=$33 title="3 x 3"><input id=$43 title="4 x 3"><input id=$53 title="5 x 3"><input id=$63 title="6 x 3"><input id=$73 title="7 x 3"><input id=$83 title="8 x 3"><input id=$93 title="9 x 3"><input id=$a3 title="a x 3" class="sr">
+        <input id=$14 title="1 x 4" class="s sl"><input id=$24 title="2 x 4"><input id=$34 title="3 x 4"><input id=$44 title="4 x 4"><input id=$54 title="5 x 4"><input id=$64 title="6 x 4"><input id=$74 title="7 x 4"><input id=$84 title="8 x 4"><input id=$94 title="9 x 4"><input id=$a4 title="a x 4" class="sr">
+        <input id=$15 title="1 x 5" class="s sl"><input id=$25 title="2 x 5"><input id=$35 title="3 x 5"><input id=$45 title="4 x 5"><input id=$55 title="5 x 5"><input id=$65 title="6 x 5"><input id=$75 title="7 x 5"><input id=$85 title="8 x 5"><input id=$95 title="9 x 5"><input id=$a5 title="a x 5" class="sr">
+        <input id=$16 title="1 x 6" class="s sl"><input id=$26 title="2 x 6"><input id=$36 title="3 x 6"><input id=$46 title="4 x 6"><input id=$56 title="5 x 6"><input id=$66 title="6 x 6"><input id=$76 title="7 x 6"><input id=$86 title="8 x 6"><input id=$96 title="9 x 6"><input id=$a6 title="a x 6" class="sr">
+        <input id=$17 title="1 x 7" class="s sl"><input id=$27 title="2 x 7"><input id=$37 title="3 x 7"><input id=$47 title="4 x 7"><input id=$57 title="5 x 7"><input id=$67 title="6 x 7"><input id=$77 title="7 x 7"><input id=$87 title="8 x 7"><input id=$97 title="9 x 7"><input id=$a7 title="a x 7" class="sr">
+        <input id=$18 title="1 x 8" class="s sl"><input id=$28 title="2 x 8"><input id=$38 title="3 x 8"><input id=$48 title="4 x 8"><input id=$58 title="5 x 8"><input id=$68 title="6 x 8"><input id=$78 title="7 x 8"><input id=$88 title="8 x 8"><input id=$98 title="9 x 8"><input id=$a8 title="a x 8" class="sr">
+        <input id=$19 title="1 x 9" class="s sl"><input id=$29 title="2 x 9"><input id=$39 title="3 x 9"><input id=$49 title="4 x 9"><input id=$59 title="5 x 9"><input id=$69 title="6 x 9"><input id=$79 title="7 x 9"><input id=$89 title="8 x 9"><input id=$99 title="9 x 9"><input id=$a9 title="a x 9" class="sr">
+        <input id=$1a title="1 x a" class="s sb sl"><input id=$2a title="2 x a" class="sb"><input id=$3a title="3 x a" class="sb"><input id=$4a title="4 x a" class="sb"><input id=$5a title="5 x a" class="sb"><input id=$6a title="6 x a" class="sb"><input id=$7a title="7 x a" class="sb"><input id=$8a title="8 x a" class="sb"><input id=$9a title="9 x a" class="sb"><input id=$aa title="a x a" class="sb sr">
+      </div>
+      <div id=$hintx class="hintx" style="clear: both; width: 535px; margin-top: 10px; margin-left: 63px;">
+        <input id=$hx1 class="ohforgetit">
+        <input id=$hx2>
+        <input id=$hx3>
+        <input id=$hx4>
+        <input id=$hx5>
+        <input id=$hx6>
+        <input id=$hx7>
+        <input id=$hx8>
+        <input id=$hx9>
+        <input id=$hxa>
+      </div>
+    </div>
+    <div id=$timeoutwarn style="color:red; display: none;"><b>Search timed out (5s). Either disable timeout protection (at your own risk) or add a few more hints. Or use a faster computer ;)</b></div>
+    <div class="input">
+      <p>Input dsl:</p>
+      <textarea id=$input style="width: 400px; height: 400px;"></textarea>
+    </div>
+    <div class="output">
+      <p>Output:</p>
+      <textarea id=$output style="width: 400px; height: 400px;"></textarea>
+    </div>
+  </div>
+  <div style="clear: left; margin-top: 10px;">
+    Import: <input id=$import style="width: 600px;" value="4321[4013132132  8                      3      6            0                        3             6               3142241102]"> <button id=$load>Load</button><br>
+    Export: <input id=$export style="width: 600px;"> <button id=$update>Update</button><br>
+  </div>
+  <p>Note: Solving won't work in Edge and Safari until they support <code>TextEncoder</code> (or when the standards committee grace us with a simpler method of converting string to <code>Uint8Array</code>, whichever comes first).</p>
+  <p>Firefox ... sometimes works. It seems to handle <code>Uint8Array</code> slightly different from v8 which might cause binary desyncs :'( ymmv</p>
+  <script>
+    var exports = {};
+  </script>
+  <!--
+  <script
+    src="../../dist/fdq.js"
+    onload="$loading.style.display = 'none';"
+    onerror="
+      $loading.innerHTML = '(<b>unable to load the lib, generate build first then refresh</b>)';
+      $loading.style.color = 'red';
+    "
+  ></script>
+  -->
+  <script
+    src="fdq.dist.js"
+    onload="$loading.style.display = 'none';"
+    onerror="
+      $loading.innerHTML = '(<b>unable to load the lib, generate build first then refresh</b>)';
+      $loading.style.color = 'red';
+    "
+  ></script>
+  <script>
+    // https://www.gmpuzzles.com/blog/tag/battleships-2/
+    if (typeof Solver === 'undefined') {
+      console.error('Did not load library. Fix file and refresh.');
+    }
+
+    let dsl = `
+      # Blank sea:
+
+      : WATER 0
+      : HOR_MID 1 # middle piece of a horizontal boat
+      : VER_MID 2 # middle piece of a vertical boat
+      : TOP 3     # top of vert boat
+      : RIGHT 4   # right of horz boat
+      : BOTTOM 5  # bottom of vert boat
+      : LEFT 6    # left of horz boat
+      : ONE 7     # 1x1 boat
+      #: MID 8 (this is translated to [1,2] when compiling the problem)
+
+      : $11,$12,$13,$14,$15,$16,$17,$18,$19,$1a [0, 7]
+      : $21,$22,$23,$24,$25,$26,$27,$28,$29,$2a [0, 7]
+      : $31,$32,$33,$34,$35,$36,$37,$38,$39,$3a [0, 7]
+      : $41,$42,$43,$44,$45,$46,$47,$48,$49,$4a [0, 7]
+      : $51,$52,$53,$54,$55,$56,$57,$58,$59,$5a [0, 7]
+      : $61,$62,$63,$64,$65,$66,$67,$68,$69,$6a [0, 7]
+      : $71,$72,$73,$74,$75,$76,$77,$78,$79,$7a [0, 7]
+      : $81,$82,$83,$84,$85,$86,$87,$88,$89,$8a [0, 7]
+      : $91,$92,$93,$94,$95,$96,$97,$98,$99,$9a [0, 7]
+      : $a1,$a2,$a3,$a4,$a5,$a6,$a7,$a8,$a9,$aa [0, 7]
+
+      : $11L1, $12L1, $13L1, $14L1, $15L1, $16L1, $17L1, $18L1, $19L1, $1aL1, $21L1, $22L1, $23L1, $24L1, $25L1, $26L1, $27L1, $28L1, $29L1, $2aL1, $31L1, $32L1, $33L1, $34L1, $35L1, $36L1, $37L1, $38L1, $39L1, $3aL1, $41L1, $42L1, $43L1, $44L1, $45L1, $46L1, $47L1, $48L1, $49L1, $4aL1, $51L1, $52L1, $53L1, $54L1, $55L1, $56L1, $57L1, $58L1, $59L1, $5aL1, $61L1, $62L1, $63L1, $64L1, $65L1, $66L1, $67L1, $68L1, $69L1, $6aL1, $71L1, $72L1, $73L1, $74L1, $75L1, $76L1, $77L1, $78L1, $79L1, $7aL1, $81L1, $82L1, $83L1, $84L1, $85L1, $86L1, $87L1, $88L1, $89L1, $8aL1, $91L1, $92L1, $93L1, $94L1, $95L1, $96L1, $97L1, $98L1, $99L1, $9aL1, $a1L1, $a2L1, $a3L1, $a4L1, $a5L1, $a6L1, $a7L1, $a8L1, $a9L1, $aaL1 [0 1]
+      : $11L2, $12L2, $13L2, $14L2, $15L2, $16L2, $17L2, $18L2, $19L2, $1aL2, $21L2, $22L2, $23L2, $24L2, $25L2, $26L2, $27L2, $28L2, $29L2, $2aL2, $31L2, $32L2, $33L2, $34L2, $35L2, $36L2, $37L2, $38L2, $39L2, $3aL2, $41L2, $42L2, $43L2, $44L2, $45L2, $46L2, $47L2, $48L2, $49L2, $4aL2, $51L2, $52L2, $53L2, $54L2, $55L2, $56L2, $57L2, $58L2, $59L2, $5aL2, $61L2, $62L2, $63L2, $64L2, $65L2, $66L2, $67L2, $68L2, $69L2, $6aL2, $71L2, $72L2, $73L2, $74L2, $75L2, $76L2, $77L2, $78L2, $79L2, $7aL2, $81L2, $82L2, $83L2, $84L2, $85L2, $86L2, $87L2, $88L2, $89L2, $8aL2, $91L2, $92L2, $93L2, $94L2, $95L2, $96L2, $97L2, $98L2, $99L2, $9aL2, $a1L2, $a2L2, $a3L2, $a4L2, $a5L2, $a6L2, $a7L2, $a8L2, $a9L2, $aaL2 [0 1]
+      : $11L3, $12L3, $13L3, $14L3, $15L3, $16L3, $17L3, $18L3, $19L3, $1aL3, $21L3, $22L3, $23L3, $24L3, $25L3, $26L3, $27L3, $28L3, $29L3, $2aL3, $31L3, $32L3, $33L3, $34L3, $35L3, $36L3, $37L3, $38L3, $39L3, $3aL3, $41L3, $42L3, $43L3, $44L3, $45L3, $46L3, $47L3, $48L3, $49L3, $4aL3, $51L3, $52L3, $53L3, $54L3, $55L3, $56L3, $57L3, $58L3, $59L3, $5aL3, $61L3, $62L3, $63L3, $64L3, $65L3, $66L3, $67L3, $68L3, $69L3, $6aL3, $71L3, $72L3, $73L3, $74L3, $75L3, $76L3, $77L3, $78L3, $79L3, $7aL3, $81L3, $82L3, $83L3, $84L3, $85L3, $86L3, $87L3, $88L3, $89L3, $8aL3, $91L3, $92L3, $93L3, $94L3, $95L3, $96L3, $97L3, $98L3, $99L3, $9aL3, $a1L3, $a2L3, $a3L3, $a4L3, $a5L3, $a6L3, $a7L3, $a8L3, $a9L3, $aaL3 [0 1]
+      : $11L4, $12L4, $13L4, $14L4, $15L4, $16L4, $17L4, $18L4, $19L4, $1aL4, $21L4, $22L4, $23L4, $24L4, $25L4, $26L4, $27L4, $28L4, $29L4, $2aL4, $31L4, $32L4, $33L4, $34L4, $35L4, $36L4, $37L4, $38L4, $39L4, $3aL4, $41L4, $42L4, $43L4, $44L4, $45L4, $46L4, $47L4, $48L4, $49L4, $4aL4, $51L4, $52L4, $53L4, $54L4, $55L4, $56L4, $57L4, $58L4, $59L4, $5aL4, $61L4, $62L4, $63L4, $64L4, $65L4, $66L4, $67L4, $68L4, $69L4, $6aL4, $71L4, $72L4, $73L4, $74L4, $75L4, $76L4, $77L4, $78L4, $79L4, $7aL4, $81L4, $82L4, $83L4, $84L4, $85L4, $86L4, $87L4, $88L4, $89L4, $8aL4, $91L4, $92L4, $93L4, $94L4, $95L4, $96L4, $97L4, $98L4, $99L4, $9aL4, $a1L4, $a2L4, $a3L4, $a4L4, $a5L4, $a6L4, $a7L4, $a8L4, $a9L4, $aaL4 [0 1]
+
+      # Count the number of boat types
+      : count1, count2, count3, count4 *
+      count1 = sum($11L1, $12L1, $13L1, $14L1, $15L1, $16L1, $17L1, $18L1, $19L1, $1aL1, $21L1, $22L1, $23L1, $24L1, $25L1, $26L1, $27L1, $28L1, $29L1, $2aL1, $31L1, $32L1, $33L1, $34L1, $35L1, $36L1, $37L1, $38L1, $39L1, $3aL1, $41L1, $42L1, $43L1, $44L1, $45L1, $46L1, $47L1, $48L1, $49L1, $4aL1, $51L1, $52L1, $53L1, $54L1, $55L1, $56L1, $57L1, $58L1, $59L1, $5aL1, $61L1, $62L1, $63L1, $64L1, $65L1, $66L1, $67L1, $68L1, $69L1, $6aL1, $71L1, $72L1, $73L1, $74L1, $75L1, $76L1, $77L1, $78L1, $79L1, $7aL1, $81L1, $82L1, $83L1, $84L1, $85L1, $86L1, $87L1, $88L1, $89L1, $8aL1, $91L1, $92L1, $93L1, $94L1, $95L1, $96L1, $97L1, $98L1, $99L1, $9aL1, $a1L1, $a2L1, $a3L1, $a4L1, $a5L1, $a6L1, $a7L1, $a8L1, $a9L1, $aaL1)
+      count2 = sum($11L2, $12L2, $13L2, $14L2, $15L2, $16L2, $17L2, $18L2, $19L2, $1aL2, $21L2, $22L2, $23L2, $24L2, $25L2, $26L2, $27L2, $28L2, $29L2, $2aL2, $31L2, $32L2, $33L2, $34L2, $35L2, $36L2, $37L2, $38L2, $39L2, $3aL2, $41L2, $42L2, $43L2, $44L2, $45L2, $46L2, $47L2, $48L2, $49L2, $4aL2, $51L2, $52L2, $53L2, $54L2, $55L2, $56L2, $57L2, $58L2, $59L2, $5aL2, $61L2, $62L2, $63L2, $64L2, $65L2, $66L2, $67L2, $68L2, $69L2, $6aL2, $71L2, $72L2, $73L2, $74L2, $75L2, $76L2, $77L2, $78L2, $79L2, $7aL2, $81L2, $82L2, $83L2, $84L2, $85L2, $86L2, $87L2, $88L2, $89L2, $8aL2, $91L2, $92L2, $93L2, $94L2, $95L2, $96L2, $97L2, $98L2, $99L2, $9aL2, $a1L2, $a2L2, $a3L2, $a4L2, $a5L2, $a6L2, $a7L2, $a8L2, $a9L2, $aaL2)
+      count3 = sum($11L3, $12L3, $13L3, $14L3, $15L3, $16L3, $17L3, $18L3, $19L3, $1aL3, $21L3, $22L3, $23L3, $24L3, $25L3, $26L3, $27L3, $28L3, $29L3, $2aL3, $31L3, $32L3, $33L3, $34L3, $35L3, $36L3, $37L3, $38L3, $39L3, $3aL3, $41L3, $42L3, $43L3, $44L3, $45L3, $46L3, $47L3, $48L3, $49L3, $4aL3, $51L3, $52L3, $53L3, $54L3, $55L3, $56L3, $57L3, $58L3, $59L3, $5aL3, $61L3, $62L3, $63L3, $64L3, $65L3, $66L3, $67L3, $68L3, $69L3, $6aL3, $71L3, $72L3, $73L3, $74L3, $75L3, $76L3, $77L3, $78L3, $79L3, $7aL3, $81L3, $82L3, $83L3, $84L3, $85L3, $86L3, $87L3, $88L3, $89L3, $8aL3, $91L3, $92L3, $93L3, $94L3, $95L3, $96L3, $97L3, $98L3, $99L3, $9aL3, $a1L3, $a2L3, $a3L3, $a4L3, $a5L3, $a6L3, $a7L3, $a8L3, $a9L3, $aaL3)
+      count4 = sum($11L4, $12L4, $13L4, $14L4, $15L4, $16L4, $17L4, $18L4, $19L4, $1aL4, $21L4, $22L4, $23L4, $24L4, $25L4, $26L4, $27L4, $28L4, $29L4, $2aL4, $31L4, $32L4, $33L4, $34L4, $35L4, $36L4, $37L4, $38L4, $39L4, $3aL4, $41L4, $42L4, $43L4, $44L4, $45L4, $46L4, $47L4, $48L4, $49L4, $4aL4, $51L4, $52L4, $53L4, $54L4, $55L4, $56L4, $57L4, $58L4, $59L4, $5aL4, $61L4, $62L4, $63L4, $64L4, $65L4, $66L4, $67L4, $68L4, $69L4, $6aL4, $71L4, $72L4, $73L4, $74L4, $75L4, $76L4, $77L4, $78L4, $79L4, $7aL4, $81L4, $82L4, $83L4, $84L4, $85L4, $86L4, $87L4, $88L4, $89L4, $8aL4, $91L4, $92L4, $93L4, $94L4, $95L4, $96L4, $97L4, $98L4, $99L4, $9aL4, $a1L4, $a2L4, $a3L4, $a4L4, $a5L4, $a6L4, $a7L4, $a8L4, $a9L4, $aaL4)
+
+    `;
+
+    // Note: `i` is the current x or y index. the previous index is `h`, the next is `j`, `k`, `l`
+    //       So for each cell <x,y> we replace `$ij` with `'$'+x+(y+1)` etc
+    //       We replace OOB cell ids with `0` which should presolve. So `$hh` in <1,1> becomes `0`.
+    //       (Since `0` means "water" this will still allow ships on edges without extra logic)
+    let template = `
+      ### Cell: $ii
+
+      # Check pieces of a horizontal boat. LEFT and HOR_MID must have HOR_MID or RIGHT to their right.
+      (($ii ==? LEFT) |? ($ii ==? HOR_MID)) == (($ji ==? HOR_MID) |? ($ji ==? RIGHT))
+      (($ii ==? HOR_MID) |? ($ii ==? RIGHT)) == ( ($hi ==? LEFT) |? ($hi ==? HOR_MID) )
+      # Check for water of horizontal boat pieces
+      ($ii ==? LEFT) -> all?( ($hh ==? WATER) ($hi ==? WATER) ($hj ==? WATER) )
+      some?( ($ii ==? LEFT) ($ii ==? HOR_MID) ($ii ==? RIGHT) ) -> all?( ($ih ==? WATER) ($ij ==? WATER) )
+      ($ii ==? RIGHT) -> all?( ($jh ==? WATER) ($ji ==? WATER) ($jj ==? WATER) )
+      # Restrict a boat size to 4 (note: <><> is illegal)
+      ($ii ==? LEFT) -> some?( ($ji ==? RIGHT) ($ki ==? RIGHT) ($li ==? RIGHT))
+
+      # Now do the same for vertical boats. Same logic so no comments.
+      (($ii ==? TOP) |? ($ii ==? VER_MID)) == (($ij ==? VER_MID) |? ($ij ==? BOTTOM))
+      (($ii ==? VER_MID) |? ($ii ==? BOTTOM)) == ( ($ih ==? TOP) |? ($ih ==? VER_MID) )
+      ($ii ==? TOP) -> all?( ($hh ==? WATER) ($ih ==? WATER) ($jh ==? WATER) )
+      some?( ($ii ==? TOP) ($ii ==? VER_MID) ($ii ==? BOTTOM) ) -> all?( ($hi ==? WATER) ($ji ==? WATER) )
+      ($ii ==? BOTTOM) -> all?( ($hj ==? WATER) ($ij ==? WATER) ($jj ==? WATER) )
+      ($ii ==? TOP) -> some?( ($ij ==? BOTTOM) ($ik ==? BOTTOM) ($il ==? BOTTOM))
+
+      # 1x1 boats (if that then completely surrounded by water)
+      ($ii ==? ONE) -> all?( ($hh ==? WATER) ($ih ==? WATER) ($jh ==? WATER) ($hi ==? WATER) ($jh ==? WATER) ($hj ==? WATER) ($ij ==? WATER) ($jj ==? WATER) )
+
+      # Get size so we can count them
+      $iiL1 = $ii ==? ONE                                                                              # ●
+      $iiL2 = (all?( ($ii ==? LEFT) ($ji ==? RIGHT) )) |? (all?( ($ii ==? TOP) ($ij ==? BOTTOM) ))     # ◀▶
+      $iiL3 = (all?( ($ii ==? LEFT) ($ki ==? RIGHT) )) |? (all?( ($ii ==? TOP) ($ik ==? BOTTOM) ))     # ◀▢▶    if ki=right then ji must be mid, no need to check this
+      $iiL4 = (all?( ($ii ==? LEFT) ($li ==? RIGHT) )) |? (all?( ($ii ==? TOP) ($il ==? BOTTOM) ))     # ◀▢▢▶   if li=right then ji and ki must be mid because <><> would be touching boats
+    `;
+
+    function to(n) { if (n === 10) return 'a'; return n; }
+
+    let cells = [];
+    for (let y=1; y<=10; ++y) {
+      for (let x=1; x<=10; ++x) {
+        let mask = {
+          $hh: (x > 1 && y > 1) ? '$' + to(x-1) + to(y-1) : '0',
+          $hi: x > 1 ? '$' + to(x-1) + to(y) : '0',
+          $hj: (x > 1 && y <= 9) ? '$' + to(x-1) + to(y+1) : '0',
+          $ih: y > 1 ? '$' + to(x) + to(y-1) : '0',
+          $ii: '$' + to(x) + to(y),
+          $ij: y <= 9 ? '$' + to(x) + to(y+1) : '0',
+          $ik: y <= 8 ? '$' + to(x) + to(y+2) : '0',
+          $il: y <= 7 ? '$' + to(x) + to(y+3) : '0',
+          $jh: (x <= 9 && y > 1) ? '$' + to(x+1) + to(y-1) : '0',
+          $ji: x <= 9 ? '$' + to(x+1) + to(y) : '0',
+          $jj: (x <= 9 && y <= 9) ? '$' + to(x+1) + to(y+1) : '0',
+          $ki: x <= 8 ? '$' + to(x+2) + to(y) : '0',
+          $li: x <= 7 ? '$' + to(x+3) + to(y) : '0',
+        };
+        cells.push(
+          template.replace(/\$\w\w/g, function (m) {
+            return mask[m]
+          })
+        );
+      }
+    }
+
+    dsl += cells.join('\n\n');
+
+    $solve.onclick = function(){
+      $input.value = '';
+      $output.value = '';
+      $timeoutwarn.style.display = 'none';
+      $puzzle.style.backgroundColor = 'transparent';
+
+      let start = Date.now();
+      let disabled = $timeout.checked;
+      let optionsFD = {
+        log: 0,
+        max: 1,
+        beforeSpace: s => {
+          if (!disabled) return false;
+          if (Date.now() - start > 5000) { // 5s timeout
+            $timeoutwarn.style.display = 'block';
+            return true;
+          }
+          return false;
+        },
+      };
+      let optionsPre = {
+        log: 0,
+        printDslAfter: s => console.log(s),
+      };
+
+      $update.onclick();
+
+      let counts = `
+        # Occurrence requirement per boat type
+        count1 == ${$boats1.value}
+        count2 == ${$boats2.value}
+        count3 == ${$boats3.value}
+        count4 == ${$boats4.value}
+      `;
+
+      let fixed = [];
+      [...document.querySelectorAll('.puzzle input')].forEach(inp => {
+        if (inp.value) {
+          if (inp.value === '8') { // this means (VER_MID | HOR_MID)
+            // these constraints are almost immediately eliminated and will cause the domain of $xy to be [1,2]
+            fixed.push(inp.id + ' >= 1')
+            fixed.push(inp.id + ' <= 2')
+          } else {
+            fixed.push(inp.id + ' == ' + inp.value)
+          }
+        }
+      });
+
+      let hints = [];
+      [...document.querySelectorAll('.hintx input')].forEach((inp, i) => {
+        let j = i + 1;
+        if (j === 10) j = 'a';
+        if (inp.value) {
+          hints.push(`${inp.value} = sum( ($${j}1 >? 0) ($${j}2 >? 0) ($${j}3 >? 0) ($${j}4 >? 0) ($${j}5 >? 0) ($${j}6 >? 0) ($${j}7 >? 0) ($${j}8 >? 0) ($${j}9 >? 0) ($${j}a >? 0) )`);
+        }
+      });
+      [...document.querySelectorAll('.hinty input')].forEach((inp, i) => {
+        let j = i + 1;
+        if (j === 10) j = 'a';
+        if (inp.value) {
+          hints.push(`${inp.value} = sum( ($1${j} >? 0) ($2${j} >? 0) ($3${j} >? 0) ($4${j} >? 0) ($5${j} >? 0) ($6${j} >? 0) ($7${j} >? 0) ($8${j} >? 0) ($9${j} >? 0) ($a${j} >? 0) )`);
+        }
+      });
+
+      let problem =
+        dsl +
+        counts + '\n\n' +
+        '# Cell Hints:\n\n' +
+        fixed.join('\n') + '\n\n' +
+        '# Side Hints:\n\n' +
+        hints.join('\n');
+      $input.value = problem.split(/\n/g).map(line => line.trim()).join('\n');
+
+      // give UI time to update
+      setTimeout(() => {
+        if ($pre.checked) {
+          let t = Solver.pre(problem, optionsPre, optionsFD);
+          $output.value = JSON.stringify(t).replace(/"/g, '');
+          if (t === false) {
+            $puzzle.style.backgroundColor = 'lightpink';
+          } else {
+            $puzzle.style.backgroundColor = 'lightgreen';
+            for (let id in t) if (id[0] === '$' && id.length === 3) setInput(id, t[id]);
+          }
+        } else {
+          let s = Solver.dsl(problem);
+          s.solve(optionsFD);
+          let t = s.solutions;
+          $output.value = JSON.stringify(t).replace(/"/g, '');
+          for (let id in t[0]) if (id[0] === '$' && id.length === 3) setInput(id, t[id]);
+        }
+      }, 10);
+    };
+
+    $puzzle.onchange = $puzzle.onkeyup = e => {
+      $puzzle.style.backgroundColor = 'transparent';
+      if (e.target.nodeName === 'INPUT') e.target.setAttribute('data-value', e.target.value);
+    };
+
+    $load.onclick = function(){
+      let v = $import.value;
+      let b1 = v[0];
+      let b2 = v[1];
+      let b3 = v[2];
+      let b4 = v[3];
+      if (v[4] !== '[' || v[v.length-1] !== ']') {
+        $import.style.backgroundColor = 'tomato';
+        return;
+      }
+      $boats1.value = b1;
+      $boats2.value = b2;
+      $boats3.value = b3;
+      $boats4.value = b4;
+      [...document.querySelectorAll('.inputs input')].forEach((inp, i) => _setInput(inp, (' []undefined'.indexOf(v[i+5]) >= 0 ? '' : v[i+5])));
+    };
+
+    $update.onclick = function(){
+      let exp = [];
+      [...document.querySelectorAll('.inputs input')].forEach(inp => inp.value ? exp.push(inp.value) : exp.push(' '));
+      $export.value = $boats1.value + $boats2.value + $boats3.value + $boats4.value + '[' + exp.join('') + ']';
+    };
+
+    $clear.onclick = function(){
+      [...document.querySelectorAll('.inputs input')].forEach(inp => _setInput(inp, ''));
+    };
+//
+    $load1.onclick = function(){
+      $import.value = '4321[4013132132  8                      3      6            0                        3             6               3142241102]';
+      $load.onclick();
+    };
+
+    $load2.onclick = function(){
+      // https://www.gmpuzzles.com/blog/tag/battleships-2/
+      $import.value = '4321[1122  1212                               0                                                    0                5  6  7  ]';
+      $load.onclick();
+    };
+
+    $load3.onclick = function(){
+      $import.value = '4321[2233112321                3      3                                              7        3             0      1315132112]';
+      $load.onclick();
+    };
+
+    function setInput(id, value) {
+      _setInput(window[id], value)
+    }
+    function _setInput(input, value) {
+      input.value = value;
+      $puzzle.style.backgroundColor = 'transparent';
+      input.setAttribute('data-value', value);
+    }
+
+    setTimeout($load1.onclick, 10);
+  </script>
+</body>
+</html>

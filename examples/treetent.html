@@ -1,0 +1,403 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+  <style>
+    html { background: url(data:text/plain;charset=utf-8,foo); }
+    .hintx,
+    .hinty,
+    .puzzle,
+    .control,
+    .input,
+    .output {
+      float: left;
+      margin-right: 10px;
+    }
+    .puzzle {
+
+    }
+    .hintx input,
+    .hinty input,
+    .puzzle input {
+      position: relative;
+      width: 50px;
+      height: 50px;
+      float: left;
+      border: 1px solid green;
+      border-width: 1px 1px 0 0;
+      text-align: center;
+      line-height: 50px;
+      font-size: 30px;
+      background-color: transparent;
+      overflow: hidden;
+    }
+    .hinty input {
+      clear: both;
+      border: 1px solid black;
+      border-bottom: 0;
+    }
+    .hinty input:last-child {
+      border: 1px solid black;
+    }
+    .hintx input {
+      border: 1px solid black;
+      border-left: 0;
+    }
+    .hintx .ohforgetit {
+      border: 1px solid black;
+    }
+    .puzzle input:hover { background-color: yellow; }
+    .puzzle .st { border-top: 2px solid black; }
+    .puzzle .sr { border-right: 2px solid black; }
+    .puzzle .sb { border-bottom: 2px solid black; }
+    .puzzle .sl { border-left: 2px solid black; }
+    .puzzle .s { clear: left; }
+    .puzzle input[data-value="0"] {
+      background-color: #ddd;
+     }
+    .puzzle input[data-value="1"] {
+      background-color: lightgreen;
+     }
+    .puzzle input[data-value="2"] {
+      background:
+        linear-gradient(60deg, transparent 65%, #ddd 37%),
+        linear-gradient(-60deg, transparent 65%, #ddd 37%),
+        linear-gradient(to bottom, sandybrown, sandybrown);
+     }
+    .puzzle input[data-value="3"] {
+      background:
+        linear-gradient(150deg, transparent 65%, #ddd 37%),
+        linear-gradient(30deg, transparent 65%, #ddd 37%),
+        linear-gradient(to left, sandybrown, sandybrown);
+     }
+    .puzzle input[data-value="4"] {
+      background:
+        linear-gradient(240deg, transparent 65%, #ddd 37%),
+        linear-gradient(120deg, transparent 65%, #ddd 37%),
+        linear-gradient(to top, sandybrown, sandybrown);
+     }
+    .puzzle input[data-value="5"] {
+      background:
+        linear-gradient(330deg, transparent 65%, #ddd 37%),
+        linear-gradient(210deg, transparent 65%, #ddd 37%),
+        linear-gradient(to right, sandybrown, sandybrown);
+     }
+
+
+  </style>
+  <p>"Daily tents" / Trees and / Tents (?) logic puzzle solver (<a href="https://www.chiark.greenend.org.uk/~sgtatham/puzzles/js/tents.html" target="_blank">explanation of puzzle</a>). Solving in <a href="https://github.com/qfox/fdq" target="_blank">fdq</a>. By Peter van der Zee, &copy; <a href="http://qfox.nl" target="_blank">qfox.nl</a>, September 2017.</p>
+  <p>Given a 10x10 grid and some trees (cells with a <code>1</code> turn green), for each tree, assign one tent orthogonal to that tree. Tents cannot touch each other, not even diagonally. Numbers to the side indicate how many tents occur in that row or column.</p>
+  <p>Cell value legend: 0=empty, 1=tree, 2/3/4/5= tent belonging to tree below/left/up/right. Press load buttons for examples:)</p>
+  <p id=$loading>(Trying to load library)</p>
+  <div style="overflow: auto;">
+    <div class="control">
+      <button id=$solve>Solve</button> <button id=$clear>Clear</button> <button id=$reset disabled>Reset</button><br>
+      <br>
+      <label><input type="checkbox" id=$timeout checked onchange="this.parentNode.style.color = this.checked?'inherit':'red'"> Timeout protection</label><br>
+      <br>
+      <button id=$load1>Load 1</button> <button id=$load2>Load 2</button> <button id=$load3>Load 3</button>
+      <br>
+      <br>
+      <label><input type="radio" name=how id=$pre checked> reduce constraints first</label><br>
+      <label><input type="radio" name=how> brute force solve</label><br>
+    </div>
+
+    <div style="float: left;" id=$inputs class="inputs">
+      <div id=$hinty class="hinty">
+        <input id=$hy1>
+        <input id=$hy2>
+        <input id=$hy3>
+        <input id=$hy4>
+        <input id=$hy5>
+        <input id=$hy6>
+        <input id=$hy7>
+        <input id=$hy8>
+        <input id=$hy9>
+        <input id=$hya>
+      </div>
+      <div id=$puzzle class="puzzle">
+        <input id=$11 title="1 x 1" class="s st sl"><input id=$21 title="2 x 1" class="st"><input id=$31 title="3 x 1" class="st"><input id=$41 title="4 x 1" class="st"><input id=$51 title="5 x 1" class="st"><input id=$61 title="6 x 1" class="st"><input id=$71 title="7 x 1" class="st"><input id=$81 title="8 x 1" class="st"><input id=$91 title="9 x 1" class="st"><input id=$a1 title="a x 1" class="st sr">
+        <input id=$12 title="1 x 2" class="s sl"><input id=$22 title="2 x 2"><input id=$32 title="3 x 2"><input id=$42 title="4 x 2"><input id=$52 title="5 x 2"><input id=$62 title="6 x 2"><input id=$72 title="7 x 2"><input id=$82 title="8 x 2"><input id=$92 title="9 x 2"><input id=$a2 title="a x 2" class="sr">
+        <input id=$13 title="1 x 3" class="s sl"><input id=$23 title="2 x 3"><input id=$33 title="3 x 3"><input id=$43 title="4 x 3"><input id=$53 title="5 x 3"><input id=$63 title="6 x 3"><input id=$73 title="7 x 3"><input id=$83 title="8 x 3"><input id=$93 title="9 x 3"><input id=$a3 title="a x 3" class="sr">
+        <input id=$14 title="1 x 4" class="s sl"><input id=$24 title="2 x 4"><input id=$34 title="3 x 4"><input id=$44 title="4 x 4"><input id=$54 title="5 x 4"><input id=$64 title="6 x 4"><input id=$74 title="7 x 4"><input id=$84 title="8 x 4"><input id=$94 title="9 x 4"><input id=$a4 title="a x 4" class="sr">
+        <input id=$15 title="1 x 5" class="s sl"><input id=$25 title="2 x 5"><input id=$35 title="3 x 5"><input id=$45 title="4 x 5"><input id=$55 title="5 x 5"><input id=$65 title="6 x 5"><input id=$75 title="7 x 5"><input id=$85 title="8 x 5"><input id=$95 title="9 x 5"><input id=$a5 title="a x 5" class="sr">
+        <input id=$16 title="1 x 6" class="s sl"><input id=$26 title="2 x 6"><input id=$36 title="3 x 6"><input id=$46 title="4 x 6"><input id=$56 title="5 x 6"><input id=$66 title="6 x 6"><input id=$76 title="7 x 6"><input id=$86 title="8 x 6"><input id=$96 title="9 x 6"><input id=$a6 title="a x 6" class="sr">
+        <input id=$17 title="1 x 7" class="s sl"><input id=$27 title="2 x 7"><input id=$37 title="3 x 7"><input id=$47 title="4 x 7"><input id=$57 title="5 x 7"><input id=$67 title="6 x 7"><input id=$77 title="7 x 7"><input id=$87 title="8 x 7"><input id=$97 title="9 x 7"><input id=$a7 title="a x 7" class="sr">
+        <input id=$18 title="1 x 8" class="s sl"><input id=$28 title="2 x 8"><input id=$38 title="3 x 8"><input id=$48 title="4 x 8"><input id=$58 title="5 x 8"><input id=$68 title="6 x 8"><input id=$78 title="7 x 8"><input id=$88 title="8 x 8"><input id=$98 title="9 x 8"><input id=$a8 title="a x 8" class="sr">
+        <input id=$19 title="1 x 9" class="s sl"><input id=$29 title="2 x 9"><input id=$39 title="3 x 9"><input id=$49 title="4 x 9"><input id=$59 title="5 x 9"><input id=$69 title="6 x 9"><input id=$79 title="7 x 9"><input id=$89 title="8 x 9"><input id=$99 title="9 x 9"><input id=$a9 title="a x 9" class="sr">
+        <input id=$1a title="1 x a" class="s sb sl"><input id=$2a title="2 x a" class="sb"><input id=$3a title="3 x a" class="sb"><input id=$4a title="4 x a" class="sb"><input id=$5a title="5 x a" class="sb"><input id=$6a title="6 x a" class="sb"><input id=$7a title="7 x a" class="sb"><input id=$8a title="8 x a" class="sb"><input id=$9a title="9 x a" class="sb"><input id=$aa title="a x a" class="sb sr">
+      </div>
+      <div id=$hintx class="hintx" style="clear: both; width: 535px; margin-top: 10px; margin-left: 63px;">
+        <input id=$hx1 class="ohforgetit">
+        <input id=$hx2>
+        <input id=$hx3>
+        <input id=$hx4>
+        <input id=$hx5>
+        <input id=$hx6>
+        <input id=$hx7>
+        <input id=$hx8>
+        <input id=$hx9>
+        <input id=$hxa>
+      </div>
+    </div>
+    <div id=$timeoutwarn style="color:red; display: none;"><b>Search timed out (5s). Either disable timeout protection (at your own risk) or add a few more hints. Or use a faster computer ;)</b></div>
+    <div class="input">
+      <p>Input dsl:</p>
+      <textarea id=$input style="width: 400px; height: 400px;"></textarea>
+    </div>
+    <div class="output">
+      <p>Output:</p>
+      <textarea id=$output style="width: 400px; height: 400px;"></textarea>
+    </div>
+  </div>
+  <div style="clear: left; margin-top: 10px;">
+    Import: <input id=$import style="width: 600px;" value="[4013132132  8                      3      6            0                        3             6               3142241102]"> <button id=$load>Load</button><br>
+    Export: <input id=$export style="width: 600px;"> <button id=$update>Update</button><br>
+  </div>
+  <p>Note: Solving won't work in Edge and Safari until they support <code>TextEncoder</code> (or when the standards committee grace us with a simpler method of converting string to <code>Uint8Array</code>, whichever comes first).</p>
+  <p>Firefox ... sometimes works. It seems to handle <code>Uint8Array</code> slightly different from v8 which might cause binary desyncs :'( ymmv</p>
+  <script>
+    var exports = {};
+  </script>
+  <!--<script-->
+    <!--src="../../dist/fdq.js"-->
+    <!--onload="$loading.style.display = 'none';"-->
+    <!--onerror="-->
+      <!--$loading.innerHTML = '(<b>unable to load the lib, generate build first then refresh</b>)';-->
+      <!--$loading.style.color = 'red';-->
+    <!--"-->
+  <!--&gt;</script>-->
+  <script
+    src="fdq.dist.js"
+    onload="$loading.style.display = 'none';"
+    onerror="
+      $loading.innerHTML = '(<b>unable to load the lib, generate build first then refresh</b>)';
+      $loading.style.color = 'red';
+    "
+  ></script>
+  <script>
+    if (typeof Solver === 'undefined') {
+      console.error('Did not load library. Fix file and refresh.');
+    }
+
+    let dsl = `
+      # Blank plains:
+
+      : EMPTY 0
+      : TREE 1
+      : TENT_UP 2
+      : TENT_RIGHT 3
+      : TENT_DOWN 4
+      : TENT_LEFT 5
+
+      : $11,$12,$13,$14,$15,$16,$17,$18,$19,$1a [0, 5]
+      : $21,$22,$23,$24,$25,$26,$27,$28,$29,$2a [0, 5]
+      : $31,$32,$33,$34,$35,$36,$37,$38,$39,$3a [0, 5]
+      : $41,$42,$43,$44,$45,$46,$47,$48,$49,$4a [0, 5]
+      : $51,$52,$53,$54,$55,$56,$57,$58,$59,$5a [0, 5]
+      : $61,$62,$63,$64,$65,$66,$67,$68,$69,$6a [0, 5]
+      : $71,$72,$73,$74,$75,$76,$77,$78,$79,$7a [0, 5]
+      : $81,$82,$83,$84,$85,$86,$87,$88,$89,$8a [0, 5]
+      : $91,$92,$93,$94,$95,$96,$97,$98,$99,$9a [0, 5]
+      : $a1,$a2,$a3,$a4,$a5,$a6,$a7,$a8,$a9,$aa [0, 5]
+
+    `;
+
+    // Default OOB cells to 0 (empty)
+    let template = `
+      ### Cell: $ii
+
+      # if this cell is a tree, there must be exactly one tent pointing to it. otherwise none.
+      ($ii ==? TREE) -> sum( ($hi ==? TENT_RIGHT) ($ih ==? TENT_DOWN) ($ji ==? TENT_LEFT) ($ij ==? TENT_UP) )
+      # if this cell is neither a tree nor EMPTY then all adjacent (even diagonal) cells cannot be TENT (but TREE is okay)
+      #
+      #  $hh $ih $jh
+      #  $hi $ii $ji
+      #  $hj $ij $jj
+      #
+      ($ii >? TREE) -> (all?( ($hh <=? TREE) ($hi <=? TREE) ($hj <=? TREE) ($ih <=? TREE) ($ij <=? TREE) ($jh <=? TREE) ($ji <=? TREE) ($jj <=? TREE) ))
+
+    `;
+
+    function to(n) { if (n === 10) return 'a'; return n; }
+
+    let cells = [];
+    for (let y=1; y<=10; ++y) {
+      for (let x=1; x<=10; ++x) {
+        let mask = {
+          $hh: (x > 1 && y > 1) ? '$' + to(x-1) + to(y-1) : '0',
+          $hi: x > 1 ? '$' + to(x-1) + to(y) : '0',
+          $hj: (x > 1 && y <= 9) ? '$' + to(x-1) + to(y+1) : '0',
+          $ih: y > 1 ? '$' + to(x) + to(y-1) : '0',
+          $ii: '$' + to(x) + to(y),
+          $ij: y <= 9 ? '$' + to(x) + to(y+1) : '0',
+          $ik: y <= 8 ? '$' + to(x) + to(y+2) : '0',
+          $il: y <= 7 ? '$' + to(x) + to(y+3) : '0',
+          $jh: (x <= 9 && y > 1) ? '$' + to(x+1) + to(y-1) : '0',
+          $ji: x <= 9 ? '$' + to(x+1) + to(y) : '0',
+          $jj: (x <= 9 && y <= 9) ? '$' + to(x+1) + to(y+1) : '0',
+          $ki: x <= 8 ? '$' + to(x+2) + to(y) : '0',
+          $li: x <= 7 ? '$' + to(x+3) + to(y) : '0',
+        };
+        cells.push(
+          template.replace(/\$\w\w/g, function (m) {
+            return mask[m]
+          })
+        );
+      }
+    }
+
+    dsl += cells.join('\n\n');
+
+    let bak = '';
+
+    $solve.onclick = function(){
+      $input.value = '';
+      $output.value = '';
+      $timeoutwarn.style.display = 'none';
+      $puzzle.style.backgroundColor = 'transparent';
+
+      bak = getPuzzleCode();
+      $reset.disabled = false;
+
+      let start = Date.now();
+      let disabled = $timeout.checked;
+      let optionsFD = {
+        log: 0,
+        max: 1,
+        beforeSpace: s => {
+          if (!disabled) return false;
+          if (Date.now() - start > 5000) { // 5s timeout
+            $timeoutwarn.style.display = 'block';
+            return true;
+          }
+          return false;
+        },
+      };
+      let optionsPre = {
+        log: 0,
+        printDslAfter: s => console.log(s),
+      };
+
+      $update.onclick();
+
+      let fixed = [];
+      [...document.querySelectorAll('.puzzle input')].forEach(inp => {
+        if (inp.value) {
+          fixed.push(inp.id + ' == ' + inp.value)
+        } else {
+          // cant plant new trees only TENTS or EMPTY
+          fixed.push(inp.id + ' != TREE');
+        }
+      });
+
+      let hints = [];
+      [...document.querySelectorAll('.hintx input')].forEach((inp, i) => {
+        let j = i + 1;
+        if (j === 10) j = 'a';
+        if (inp.value) {
+          hints.push(`${inp.value} = sum( ($${j}1 >? TREE) ($${j}2 >? TREE) ($${j}3 >? TREE) ($${j}4 >? TREE) ($${j}5 >? TREE) ($${j}6 >? TREE) ($${j}7 >? TREE) ($${j}8 >? TREE) ($${j}9 >? TREE) ($${j}a >? TREE) )`);
+        }
+      });
+      [...document.querySelectorAll('.hinty input')].forEach((inp, i) => {
+        let j = i + 1;
+        if (j === 10) j = 'a';
+        if (inp.value) {
+          hints.push(`${inp.value} = sum( ($1${j} >? TREE) ($2${j} >? TREE) ($3${j} >? TREE) ($4${j} >? TREE) ($5${j} >? TREE) ($6${j} >? TREE) ($7${j} >? TREE) ($8${j} >? TREE) ($9${j} >? TREE) ($a${j} >? TREE) )`);
+        }
+      });
+
+      let problem =
+        dsl + '\n\n' +
+        '# Cell Hints:\n\n' +
+        fixed.join('\n') + '\n\n' +
+        '# Side Hints:\n\n' +
+        hints.join('\n');
+      $input.value = problem.split(/\n/g).map(line => line.trim()).join('\n');
+
+      // give UI time to update
+      setTimeout(() => {
+        if ($pre.checked) {
+          let t = Solver.pre(problem, optionsPre, optionsFD);
+          $output.value = JSON.stringify(t).replace(/"/g, '');
+          if (t === false) {
+            $puzzle.style.backgroundColor = 'lightpink';
+          } else {
+            $puzzle.style.backgroundColor = 'lightgreen';
+            for (let id in t) if (id[0] === '$' && id.length === 3) setInput(id, t[id]);
+          }
+        } else {
+          let s = Solver.dsl(problem);
+          s.solve(optionsFD);
+          let t = s.solutions;
+          $output.value = JSON.stringify(t).replace(/"/g, '');
+          for (let id in t[0]) if (id[0] === '$' && id.length === 3) setInput(id, t[0][id]);
+        }
+      }, 10);
+    };
+
+    $puzzle.onchange = $puzzle.onkeyup = e => {
+      $puzzle.style.backgroundColor = 'transparent';
+      if (e.target.nodeName === 'INPUT') e.target.setAttribute('data-value', e.target.value);
+    };
+
+    function load(puzzle) {
+      if (puzzle[0] !== '[' || puzzle[puzzle.length-1] !== ']') {
+        $import.style.backgroundColor = 'tomato';
+        return;
+      }
+      [...document.querySelectorAll('.inputs input')].forEach((inp, i) => _setInput(inp, (' []undefined'.indexOf(puzzle[i+1]) >= 0 ? '' : puzzle[i+1])));
+    }
+
+    $reset.onclick = _ => load(bak);
+
+    $load.onclick = function(){
+      load($import.value);
+    };
+
+    function getPuzzleCode() {
+      let exp = [];
+      [...document.querySelectorAll('.inputs input')].forEach(inp => inp.value ? exp.push(inp.value) : exp.push(' '));
+      return '[' + exp.join('') + ']';
+    }
+
+    $update.onclick = function(){
+      $export.value = getPuzzleCode();
+    };
+
+    $clear.onclick = function(){
+      [...document.querySelectorAll('.inputs input')].forEach(inp => _setInput(inp, ''));
+    };
+//
+    $load1.onclick = function(){
+      $import.value = '[1312323213    1   11           1 1           1 11       1   11      1      1 1  1        11 1  1  1   1       3122212323]';
+      load($import.value);
+    };
+
+    $load2.onclick = function(){
+      // http://puzzleparasite.blogspot.nl/2012/11/13th-24-hour-puzzle-championship.html
+      $import.value = '[            11                    11   1  1      1  1             11   1 11      1    1         1 1   11    1           ]';
+      load($import.value);
+    };
+
+    $load3.onclick = function(){
+      //http://puzzleparasite.blogspot.nl/2012/11/13th-24-hour-puzzle-championship.html
+      $import.value = '[ 2 4  2 4   1  1  1  1   1           1      1      1       1     1  1    1 1    1   1    1      1 1  1  1     2  4  2  4]';
+      load($import.value);
+    };
+
+    function setInput(id, value) {
+      _setInput(window[id], value)
+    }
+    function _setInput(input, value) {
+      input.value = value;
+      $puzzle.style.backgroundColor = 'transparent';
+      input.setAttribute('data-value', value);
+    }
+
+    setTimeout($load1.onclick, 10);
+  </script>
+</body>
+</html>

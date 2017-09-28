@@ -1,0 +1,264 @@
+<style>
+  .panel { float: left; height: 300px; margin-right: 10px; }
+  .panel textarea { width: 400px; height: 400px; }
+</style>
+<body>
+  <p>
+    This is a playground for <a href="https://github.com/qfox/fdq" target="_blank">fdq</a>. <span id=$loading>(<i>lib not yet loaded</i>)</span>
+  </p>
+  <div class="panel">
+    <p>
+      Configuration:
+    </p>
+
+    <button id="$solve">Solve</button><br>
+    <br>
+    <label title="solve immediately after lib loads?" style="cursor: help;">
+      <input id=$solve_onload type="checkbox" checked>solve onload
+    </label><br>
+    <label title="use Solver.dsl().solve() or Solver.pre() ?" style="cursor: help;">
+      <input id=$pre type="checkbox" checked>pre-solve
+    </label><br>
+    <br>
+    <label title="set log level 0" style="cursor: help;">
+      <input id=$log0 type="radio" name="log">log=0
+    </label><br>
+    <label title="set log level 1" style="cursor: help;">
+      <input id=$log1 type="radio" name="log" checked>log=1
+    </label><br>
+    <label title="set log level 2" style="cursor: help;">
+      <input id=$log2 type="radio" name="log">log=2
+    </label><br>
+  </div>
+  <div class="panel">
+    <p>
+      Enter DSL to solve:
+    </p>
+    <textarea autocomplete="off" spellcheck="false" wrap="off" id=$input>
+# : A, B, C [0 100]
+# A = B * C
+# B = A / C
+
+# Blank Sudoku:
+
+: c11,c12,c13,c14,c15,c16,c17,c18,c19 [1, 9]
+: c21,c22,c23,c24,c25,c26,c27,c28,c29 [1, 9]
+: c31,c32,c33,c34,c35,c36,c37,c38,c39 [1, 9]
+: c41,c42,c43,c44,c45,c46,c47,c48,c49 [1, 9]
+: c51,c52,c53,c54,c55,c56,c57,c58,c59 [1, 9]
+: c61,c62,c63,c64,c65,c66,c67,c68,c69 [1, 9]
+: c71,c72,c73,c74,c75,c76,c77,c78,c79 [1, 9]
+: c81,c82,c83,c84,c85,c86,c87,c88,c89 [1, 9]
+: c91,c92,c93,c94,c95,c96,c97,c98,c99 [1, 9]
+
+# Enter all known cells here:
+
+## Q1
+c21 == 2
+c31 == 3
+c13 == 1
+c33 == 4
+
+## Q2
+c42 == 2
+c52 == 3
+c53 == 5
+c63 == 8
+
+## Q3
+c71 == 9
+c82 == 7
+c73 == 6
+c83 == 3
+
+## Q4
+c14 == 2
+c34 == 5
+c15 == 9
+c26 == 3
+
+## Q5
+c45 == 1
+c65 == 5
+c56 == 4
+c66 == 6
+
+## Q6
+c74 == 1
+c84 == 4
+c85 == 6
+c96 == 9
+
+## Q7
+c27 == 1
+c37 == 7
+c28 == 9
+c19 == 3
+
+## Q8
+c47 == 3
+c57 == 8
+c48 == 6
+c68 == 4
+
+## Q9
+c77 == 2
+c88 == 8
+c98 == 7
+c89 == 9
+
+# Make sure all cells in each row, column, and 3x3 are unique
+
+diff(c11 c12 c13 c21 c22 c23 c31 c32 c33)
+diff(c14 c15 c16 c24 c25 c26 c34 c35 c36)
+diff(c17 c18 c19 c27 c28 c29 c37 c38 c39)
+diff(c41 c42 c43 c51 c52 c53 c61 c62 c63)
+diff(c44 c45 c46 c54 c55 c56 c64 c65 c66)
+diff(c47 c48 c49 c57 c58 c59 c67 c68 c69)
+diff(c71 c72 c73 c81 c82 c83 c91 c92 c93)
+diff(c74 c75 c76 c84 c85 c86 c94 c95 c96)
+diff(c77 c78 c79 c87 c88 c89 c97 c98 c99)
+
+diff(c11 c12 c13 c14 c15 c16 c17 c18 c19)
+diff(c21 c22 c23 c24 c25 c26 c27 c28 c29)
+diff(c31 c32 c33 c34 c35 c36 c37 c38 c39)
+diff(c41 c42 c43 c44 c45 c46 c47 c48 c49)
+diff(c51 c52 c53 c54 c55 c56 c57 c58 c59)
+diff(c61 c62 c63 c64 c65 c66 c67 c68 c69)
+diff(c71 c72 c73 c74 c75 c76 c77 c78 c79)
+diff(c81 c82 c83 c84 c85 c86 c87 c88 c89)
+diff(c91 c92 c93 c94 c95 c96 c97 c98 c99)
+
+diff(c11 c21 c31 c41 c51 c61 c71 c81 c91)
+diff(c12 c22 c32 c42 c52 c62 c72 c82 c92)
+diff(c13 c23 c33 c43 c53 c63 c73 c83 c93)
+diff(c14 c24 c34 c44 c54 c64 c74 c84 c94)
+diff(c15 c25 c35 c45 c55 c65 c75 c85 c95)
+diff(c16 c26 c36 c46 c56 c66 c76 c86 c96)
+diff(c17 c27 c37 c47 c57 c67 c77 c87 c97)
+diff(c18 c28 c38 c48 c58 c68 c78 c88 c98)
+diff(c19 c29 c39 c49 c59 c69 c79 c89 c99)
+
+    </textarea><br>
+  </div>
+  <div class="panel">
+    <p>
+      Between presolve and FD:
+    </p>
+    <div style="float: left; margin-right: 10px;">
+      <label><input type="radio" name="bebug" checked> none for FD</label><br>
+      <label style="cursor: help;" title="simple fd debug stuff"><input type="radio" name="bebug" id=$fd_tostring> _tostring</label><br>
+      <label style="cursor: help;" title="extended debug output"><input type="radio" name="bebug" id=$fd_debug> _debug</label><br>
+      <label style="cursor: help;" title="debug the solver config after generating it"><input type="radio" name="bebug" id=$fd_debugconfig> _debugConfig</label><br>
+      <label style="cursor: help;" title="debug the first space after generating it"><input type="radio" name="bebug" id=$fd_debugspace> _debugSpace</label><br>
+      <label style="cursor: help;" title="debug the solver"><input type="radio" name="bebug" id=$fd_debugsolver> _debugSolver</label><br>
+    </div>
+    <div style="float: left; margin-right: 10px;">
+      <label style="cursor: help;" title="print the dsl at all?"><input type="checkbox" id=$pre_tostring checked> show between dsl</label><br>
+      <label style="cursor: help;" title="should dsl contain debug information (commented out)?"><input type="checkbox" id=$debugdsl checked> debugDsl</label><br>
+      <label style="cursor: help;" title="should names be renamed to their index?"><input type="checkbox" id=$indexnames checked> indexNames</label><br>
+      <label style="cursor: help;" title="should names be hashed?"><input type="checkbox" id=$hashnames> hashNames</label><br>
+      <label style="cursor: help;" title="list constraints per var as well?"><input type="checkbox" id=$groupedconstraints checked> groupedConstraints</label><br>
+    </div>
+    <br>
+    <textarea autocomplete="off" spellcheck="false" wrap="off" id=$between></textarea><br>
+  </div>
+  <div class="panel">
+    <p>
+      Output:
+    </p>
+    <textarea autocomplete="off" spellcheck="false" id=$output></textarea><br>
+  </div>
+  <div class="panel">
+    <p>
+      Terminal:
+    </p>
+    <textarea autocomplete="off" spellcheck="false" id=$debug></textarea><br>
+  </div>
+
+  <script>
+    var exports = {};
+  </script>
+  <!--<script-->
+    <!--src="../../dist/fdq.js"-->
+    <!--onload="$loading.style.display = 'none';"-->
+    <!--onerror="-->
+      <!--$loading.innerHTML = '(<b>unable to load the lib, generate build first then refresh</b>)';-->
+      <!--$loading.style.color = 'red';-->
+    <!--"-->
+  <!--&gt;</script>-->
+  <script
+    src="fdq.dist.js"
+    onload="$loading.style.display = 'none';"
+    onerror="
+      $loading.innerHTML = '(<b>unable to load the lib, generate build first then refresh</b>)';
+      $loading.style.color = 'red';
+    "
+  ></script>
+  <script>
+    if (typeof FDO === 'undefined') {
+      console.error('Did not load library. Fix file and refresh.');
+    }
+    let logs = [];
+    let debugTimer = 0;
+    function debug(s) {
+      logs.push(s);
+      if (!debugTimer) {
+        debugTimer = setTimeout(() => {
+          $debug.value = logs.join('\n');
+          debugTimer = 0;
+        }, 200);
+      }
+    }
+
+    let term = {
+      log: debug,
+      warn: debug,
+      error: debug,
+      trace: _ => _,
+      time: _ => _,
+      timeEnd: _ => _,
+    };
+    FDO.setTerm(term);
+
+    $solve.onclick = function(){
+      $between.value = '';
+      $output.value = '';
+      $debug.value = '';
+      logs = [];
+
+      let start = Date.now();
+      let optionsFD = {
+        log: $log0.checked ? 0 : $log1.checked ? 1 : $log2.checked ? 2 : NaN,
+        logger: (...args) => term.log(...args),
+        _debug: $fd_debug.checked ? true : false,
+        _debugConfig: $fd_debugconfig.checked ? true : false,
+        _debugSpace: $fd_debugspace.checked ? true : false,
+        _debugSolver: $fd_debugsolver.checked ? true : false,
+        //_toString: $fd_tostring.checked ? s => $between.value += s + '\n\n' : false,
+        beforeSpace: s => Date.now() - start > 5000, // 5s timeout
+//        afterSpace: s => true,
+      };
+      let optionsPre = {
+        log: 1,
+        debugDsl: !!$debugdsl.checked,
+        indexNames: !!$indexnames.checked,
+        hashNames: !!$hashnames.checked,
+        groupedConstraints: !!$groupedconstraints.checked,
+        printDslAfter: $pre_tostring.checked ? s => $between.value += s + '\n\n' : false,
+      };
+      if ($pre.checked) {
+        term.warn('Solver.pre:');
+        let t = FDO.pre($input.value, optionsPre, optionsFD);
+        $output.value = JSON.stringify(t).replace(/"/g, '');
+      } else {
+        term.warn('Solver.dsl:');
+        let s = FDO.dsl($input.value);
+        s.solve(optionsFD);
+        let t = s.solutions;
+        $output.value = JSON.stringify(t).replace(/"/g, '');
+      }
+    };
+    if ($solve_onload.checked) $solve.onclick();
+  </script>
+</body>

@@ -1,0 +1,213 @@
+<body>
+  <style>
+    .puzzle, .control, .input, .output { float: left; margin-right: 10px; }
+    .puzzle input {
+      width: 50px;
+      height: 50px;
+      float: left;
+      border: 1px solid green;
+      border-width: 1px 1px 0 0;
+      text-align: center;
+      line-height: 50px;
+      font-size: 30px;
+      background-color: inherit;
+    }
+    .puzzle input:hover { background-color: orange; }
+    .puzzle .st { border-top: 2px solid black; }
+    .puzzle .sr { border-right: 2px solid black; }
+    .puzzle .sb { border-bottom: 2px solid black; }
+    .puzzle .sl { border-left: 2px solid black; }
+    .puzzle .s { clear: left; }
+  </style>
+  <p>Sudoku solver. Example of a well known logic puzzle and how to solve it in <a href="https://github.com/qfox/fdq" target="_blank">fdq</a>. By Peter van der Zee, &copy; <a href="http://qfox.nl" target="_blank">qfox.nl</a>, September 2017.</p>
+  <p>Each row, column, and 3x3 grid must contain the numbers 1 through 9 once. Some numbers are given.</p>
+  <p id=$loading>(Trying to load library)</p>
+  <div style="overflow: auto;">
+    <div class="control">
+      <button id=$solve>Solve</button> <button id=$clear>Clear</button><br>
+      <br>
+      <button id=$load1>Load 1</button> <button id=$load2>Load 2</button> <button id=$load3>Load 3</button>
+      <br>
+      <br>
+      <label><input type="radio" name=how id=$pre checked> reduce constraints first</label><br>
+      <label><input type="radio" name=how> brute force solve</label>
+    </div>
+    <div id=$puzzle class="puzzle">
+      <input id=$11 class="s st sl"><input id=$21 class="st"><input id=$31 class="sr st"><input id=$41 class="st"><input id=$51 class="st"><input id=$61 class="sr st"><input id=$71 class="st"><input id=$81 class="st"><input id=$91 class="st sr">
+      <input id=$12 class="s sl"><input id=$22><input id=$32 class="sr"><input id=$42><input id=$52><input id=$62 class="sr"><input id=$72><input id=$82><input id=$92 class="sr">
+      <input id=$13 class="s sb sl"><input id=$23 class="sb"><input id=$33 class="sr sb"><input id=$43 class="sb"><input id=$53 class="sb"><input id=$63 class="sr sb"><input id=$73 class="sb"><input id=$83 class="sb"><input id=$93 class="sb sr">
+      <input id=$14 class="s sl"><input id=$24><input id=$34 class="sr"><input id=$44><input id=$54><input id=$64 class="sr"><input id=$74><input id=$84><input id=$94 class="sr">
+      <input id=$15 class="s sl"><input id=$25><input id=$35 class="sr"><input id=$45><input id=$55><input id=$65 class="sr"><input id=$75><input id=$85><input id=$95 class="sr">
+      <input id=$16 class="s sb sl"><input id=$26 class="sb"><input id=$36 class="sr sb"><input id=$46 class="sb"><input id=$56 class="sb"><input id=$66 class="sr sb"><input id=$76 class="sb"><input id=$86 class="sb"><input id=$96 class="sb sr">
+      <input id=$17 class="s sl"><input id=$27><input id=$37 class="sr"><input id=$47><input id=$57><input id=$67 class="sr"><input id=$77><input id=$87><input id=$97 class="sr">
+      <input id=$18 class="s sl"><input id=$28><input id=$38 class="sr"><input id=$48><input id=$58><input id=$68 class="sr"><input id=$78><input id=$88><input id=$98 class="sr">
+      <input id=$19 class="s sb sl"><input id=$29 class="sb"><input id=$39 class="sr sb"><input id=$49 class="sb"><input id=$59 class="sb"><input id=$69 class="sr sb"><input id=$79 class="sb"><input id=$89 class="sb"><input id=$99 class="sb sr">
+    </div>
+    <div class="input">
+      <p>Input dsl:</p>
+      <textarea id=$input style="width: 400px; height: 400px;"></textarea>
+    </div>
+    <div class="output">
+      <p>Output:</p>
+      <textarea id=$output style="width: 400px; height: 400px;"></textarea>
+    </div>
+  </div>
+  <div style="clear: left; margin-top: 10px;">
+    Import: <input id=$import style="width: 600px;" value="[ 23   9     23  7 1 4 5863 2 5   14 9  1 5 6  3  46  9 1738 2   9 6 4 873      9 ]"> <button id=$load>Load</button><br>
+    Export: <input id=$export style="width: 600px;"> <button id=$update>Update</button><br>
+  </div>
+  <p>Note: Solving won't work in Edge and Safari until they support <code>TextEncoder</code> (or when the standards committee grace us with a simpler method of converting string to <code>Uint8Array</code>, whichever comes first).</p>
+  <p>Note: It seems for some reason that the second and third problem cause problems in Firefox. Not sure what's up there. *shrug*</p>
+  <script>
+    var exports = {};
+  </script>
+  <!--<script-->
+    <!--src="../../dist/fdq.js"-->
+    <!--onload="$loading.style.display = 'none';"-->
+    <!--onerror="-->
+      <!--$loading.innerHTML = '(<b>unable to load the lib, generate build first then refresh</b>)';-->
+      <!--$loading.style.color = 'red';-->
+    <!--"-->
+  <!--&gt;</script>-->
+  <script
+    src="fdq.dist.js"
+    onload="$loading.style.display = 'none';"
+    onerror="
+      $loading.innerHTML = '(<b>unable to load the lib, generate build first then refresh</b>)';
+      $loading.style.color = 'red';
+    "
+  ></script>
+  <script>
+    if (typeof Solver === 'undefined') {
+      console.error('Did not load library. Fix file and refresh.');
+    }
+
+    let dsl = `
+      # Blank Sudoku:
+
+      : $11,$12,$13,$14,$15,$16,$17,$18,$19 [1, 9]
+      : $21,$22,$23,$24,$25,$26,$27,$28,$29 [1, 9]
+      : $31,$32,$33,$34,$35,$36,$37,$38,$39 [1, 9]
+      : $41,$42,$43,$44,$45,$46,$47,$48,$49 [1, 9]
+      : $51,$52,$53,$54,$55,$56,$57,$58,$59 [1, 9]
+      : $61,$62,$63,$64,$65,$66,$67,$68,$69 [1, 9]
+      : $71,$72,$73,$74,$75,$76,$77,$78,$79 [1, 9]
+      : $81,$82,$83,$84,$85,$86,$87,$88,$89 [1, 9]
+      : $91,$92,$93,$94,$95,$96,$97,$98,$99 [1, 9]
+
+      # Make sure all cells are unique;
+
+      # - Per column
+      diff($11 $12 $13 $21 $22 $23 $31 $32 $33)
+      diff($14 $15 $16 $24 $25 $26 $34 $35 $36)
+      diff($17 $18 $19 $27 $28 $29 $37 $38 $39)
+      diff($41 $42 $43 $51 $52 $53 $61 $62 $63)
+      diff($44 $45 $46 $54 $55 $56 $64 $65 $66)
+      diff($47 $48 $49 $57 $58 $59 $67 $68 $69)
+      diff($71 $72 $73 $81 $82 $83 $91 $92 $93)
+      diff($74 $75 $76 $84 $85 $86 $94 $95 $96)
+      diff($77 $78 $79 $87 $88 $89 $97 $98 $99)
+
+      # - Per row
+      diff($11 $12 $13 $14 $15 $16 $17 $18 $19)
+      diff($21 $22 $23 $24 $25 $26 $27 $28 $29)
+      diff($31 $32 $33 $34 $35 $36 $37 $38 $39)
+      diff($41 $42 $43 $44 $45 $46 $47 $48 $49)
+      diff($51 $52 $53 $54 $55 $56 $57 $58 $59)
+      diff($61 $62 $63 $64 $65 $66 $67 $68 $69)
+      diff($71 $72 $73 $74 $75 $76 $77 $78 $79)
+      diff($81 $82 $83 $84 $85 $86 $87 $88 $89)
+      diff($91 $92 $93 $94 $95 $96 $97 $98 $99)
+
+      # - Per 3x3
+      diff($11 $21 $31 $41 $51 $61 $71 $81 $91)
+      diff($12 $22 $32 $42 $52 $62 $72 $82 $92)
+      diff($13 $23 $33 $43 $53 $63 $73 $83 $93)
+      diff($14 $24 $34 $44 $54 $64 $74 $84 $94)
+      diff($15 $25 $35 $45 $55 $65 $75 $85 $95)
+      diff($16 $26 $36 $46 $56 $66 $76 $86 $96)
+      diff($17 $27 $37 $47 $57 $67 $77 $87 $97)
+      diff($18 $28 $38 $48 $58 $68 $78 $88 $98)
+      diff($19 $29 $39 $49 $59 $69 $79 $89 $99)
+
+      # Enter all known cells here:
+      # $xx == 4
+    `;
+
+    $solve.onclick = function(){
+      $input.value = '';
+      $output.value = '';
+
+      let start = Date.now();
+      let optionsFD = {
+        log: 0,
+        max: 1,
+        beforeSpace: s => Date.now() - start > 5000, // 5s timeout
+      };
+      let optionsPre = {
+        log: 0,
+      };
+
+      $update.onclick();
+
+      let fixed = [];
+      [...document.querySelectorAll('.puzzle input')].forEach(inp => inp.value && fixed.push(inp.id + ' == ' + inp.value));
+      let problem = dsl + fixed.join('\n');
+      $input.value = problem.split(/\n/g).map(line => line.trim()).join('\n');
+
+      if ($pre.checked) {
+        let t = Solver.pre(problem, optionsPre, optionsFD);
+        $output.value = JSON.stringify(t).replace(/"/g, '');
+        if (t === false) {
+          $puzzle.style.backgroundColor = 'lightpink';
+        } else {
+          $puzzle.style.backgroundColor = 'lightgreen';
+          for (let id in t) window[id].value = t[id];
+        }
+      } else {
+        let s = Solver.dsl(problem);
+        s.solve(optionsFD);
+        let t = s.solutions;
+        $output.value = JSON.stringify(t).replace(/"/g, '');
+        for (let id in t[0]) if (id[0] === '$') window[id].value = t[0][id];
+      }
+    };
+
+    $puzzle.onchange = _ => $puzzle.style.backgroundColor = 'inherit';
+
+    $load.onclick = function(){
+      let v = $import.value;
+      if (v[0] !== '[' || v[v.length-1] !== ']') {
+        $import.style.backgroundColor = 'tomato';
+        return;
+      }
+      [...document.querySelectorAll('.puzzle input')].forEach((inp, i) => inp.value = (v[i+1] === ' ' ? '' : v[i+1]));
+    };
+
+    $update.onclick = function(){
+      let exp = [];
+      [...document.querySelectorAll('.puzzle input')].forEach(inp => inp.value ? exp.push(inp.value) : exp.push(' '));
+      $export.value = '[' + exp.join('') + ']';
+    };
+
+    $clear.onclick = function(){
+      [...document.querySelectorAll('.puzzle input')].forEach(inp => inp.value = '');
+    };
+
+    $load1.onclick = function(){
+      $import.value = '[ 23   9     23  7 1 4 5863 2 5   14 9  1 5 6  3  46  9 1738 2   9 6 4 873      9 ]';
+      $load.onclick();
+    };
+
+    $load2.onclick = function(){
+      $import.value = '[   3 4 89 56       342 9 164 857  92      1  76  91  3 479 623  2    84 1   27   ]';
+      $load.onclick();
+    };
+
+    $load3.onclick = function(){
+      // http://www.telegraph.co.uk/news/science/science-news/9359579/Worlds-hardest-sudoku-can-you-crack-it.html
+      $import.value = '[8          36      7  9 2   5   7       45      1   3   1    68  85   1  9    4  ]';
+      $load.onclick();
+    };
+  </script>
+</body>

@@ -1,0 +1,644 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+  <style>
+    html { background: url(data:text/plain;charset=utf-8,foo); }
+    .hintx,
+    .hinty,
+    .puzzle,
+    .control,
+    .input,
+    .output {
+      float: left;
+      margin-right: 10px;
+    }
+    .puzzle {
+
+    }
+    .hintx input,
+    .hinty input,
+    .puzzle input {
+      position: relative;
+      width: 50px;
+      height: 50px;
+      float: left;
+      border: 1px solid green;
+      border-width: 1px 1px 0 0;
+      text-align: center;
+      line-height: 50px;
+      font-size: 30px;
+      font-size: 20px;
+      background-color: transparent;
+      overflow: hidden;
+    }
+    .hinty input {
+      clear: both;
+      border: 1px solid black;
+      border-bottom: 0;
+    }
+    .hinty input:last-child {
+      border: 1px solid black;
+    }
+    .hintx input {
+      border: 1px solid black;
+      border-left: 0;
+    }
+    .puzzle input:hover { background-color: yellow; }
+    .puzzle .st { border-top: 2px solid black; }
+    .puzzle .sr { border-right: 2px solid black; }
+    .puzzle .sb { border-bottom: 2px solid black; }
+    .puzzle .sl { border-left: 2px solid black; }
+    .puzzle .s { clear: left; }
+
+    .puzzle input[data-value="0"] {
+      background-color: #ddd;
+     }
+    .puzzle input[data-value="0|0"] {
+      background-color: #ddd;
+     }
+    .puzzle input[data-value="bad"] {
+      background-color: tomato;
+     }
+  </style>
+  <p>Hitori logic puzzle solver (<a href="http://www.conceptispuzzles.com/index.aspx?uri=puzzle/hitori/techniques" target="_blank">explanation of puzzle</a>). Solving in <a href="https://github.com/qfox/fdq" target="_blank">fdq</a>. By Peter van der Zee, &copy; <a href="http://qfox.nl" target="_blank">qfox.nl</a>, September 2017.</p>
+  <p>Given a 9x9 grid filled with numbers 1-9, clear some cells such that cleared cells don't touch each other (diagonal is fine) and such that each row and col only contains unique numbers (or empty cells), and such that each non-empty cell can be reached from each other non-empty cell through hor/ver moves. (While technically you can eliminate numbers that are already unique, you don't usually do this as doing so doesn't help at all.)</p>
+  <p>0 means empty but a Hitori usually starts with a fully filled grid so it's mostly a solver artifact</p>
+  <p id=$loading>(Trying to load library)</p>
+  <div style="overflow: auto;">
+    <div class="control">
+      <button id=$solve>Solve</button> <button id=$clear>Clear</button> <button id=$reset disabled>Reset</button><br>
+      <br>
+      <label><input type="checkbox" id=$timeout checked onchange="this.parentNode.style.color = this.checked?'inherit':'red'"> Timeout protection</label><br>
+      <br>
+      <button id=$load1>Load 1</button> <button id=$load2>Load 2</button> <button id=$load3>Load 3</button>
+      <br>
+      <br>
+      <label><input type="radio" name=how id=$pre checked> reduce constraints first</label><br>
+      <label><input type="radio" name=how> brute force solve</label><br>
+      <br><br>
+      <input id=$w style="width:20px; text-align: center;" value="9"> <input id=$h style="width:20px; text-align: center;" value="9"><br>
+    </div>
+
+    <div style="float: left;" id=$inputs class="inputs">
+      <div id=$puzzle class="puzzle">
+        <input id=$11 title="1 x 1" class="s st sl"><input id=$21 title="2 x 1" class="st"><input id=$31 title="3 x 1" class="st"><input id=$41 title="4 x 1" class="st"><input id=$51 title="5 x 1" class="st"><input id=$61 title="6 x 1" class="st"><input id=$71 title="7 x 1" class="st"><input id=$81 title="8 x 1" class="st"><input id=$91 title="9 x 1" class="st sr">
+        <input id=$12 title="1 x 2" class="s sl"><input id=$22 title="2 x 2"><input id=$32 title="3 x 2"><input id=$42 title="4 x 2"><input id=$52 title="5 x 2"><input id=$62 title="6 x 2"><input id=$72 title="7 x 2"><input id=$82 title="8 x 2"><input id=$92 title="9 x 2" class="sr">
+        <input id=$13 title="1 x 3" class="s sl"><input id=$23 title="2 x 3"><input id=$33 title="3 x 3"><input id=$43 title="4 x 3"><input id=$53 title="5 x 3"><input id=$63 title="6 x 3"><input id=$73 title="7 x 3"><input id=$83 title="8 x 3"><input id=$93 title="9 x 3" class="sr">
+        <input id=$14 title="1 x 4" class="s sl"><input id=$24 title="2 x 4"><input id=$34 title="3 x 4"><input id=$44 title="4 x 4"><input id=$54 title="5 x 4"><input id=$64 title="6 x 4"><input id=$74 title="7 x 4"><input id=$84 title="8 x 4"><input id=$94 title="9 x 4" class="sr">
+        <input id=$15 title="1 x 5" class="s sl"><input id=$25 title="2 x 5"><input id=$35 title="3 x 5"><input id=$45 title="4 x 5"><input id=$55 title="5 x 5"><input id=$65 title="6 x 5"><input id=$75 title="7 x 5"><input id=$85 title="8 x 5"><input id=$95 title="9 x 5" class="sr">
+        <input id=$16 title="1 x 6" class="s sl"><input id=$26 title="2 x 6"><input id=$36 title="3 x 6"><input id=$46 title="4 x 6"><input id=$56 title="5 x 6"><input id=$66 title="6 x 6"><input id=$76 title="7 x 6"><input id=$86 title="8 x 6"><input id=$96 title="9 x 6" class="sr">
+        <input id=$17 title="1 x 7" class="s sl"><input id=$27 title="2 x 7"><input id=$37 title="3 x 7"><input id=$47 title="4 x 7"><input id=$57 title="5 x 7"><input id=$67 title="6 x 7"><input id=$77 title="7 x 7"><input id=$87 title="8 x 7"><input id=$97 title="9 x 7" class="sr">
+        <input id=$18 title="1 x 8" class="s sl"><input id=$28 title="2 x 8"><input id=$38 title="3 x 8"><input id=$48 title="4 x 8"><input id=$58 title="5 x 8"><input id=$68 title="6 x 8"><input id=$78 title="7 x 8"><input id=$88 title="8 x 8"><input id=$98 title="9 x 8" class="sr">
+        <input id=$19 title="1 x 9" class="s sb sl"><input id=$29 title="2 x 9" class="sb"><input id=$39 title="3 x 9" class="sb"><input id=$49 title="4 x 9" class="sb"><input id=$59 title="5 x 9" class="sb"><input id=$69 title="6 x 9" class="sb"><input id=$79 title="7 x 9" class="sb"><input id=$89 title="8 x 9" class="sb"><input id=$99 title="9 x 9" class="sb sr">
+      </div>
+    </div>
+    <div id=$timeoutwarn style="color:red; display: none;"><b>Search timed out (5s). Either disable timeout protection (at your own risk) or add a few more hints. Or use a faster computer ;)</b></div>
+    <div class="input">
+      <p>Input dsl:</p>
+      <textarea id=$input style="width: 400px; height: 400px;"></textarea>
+    </div>
+    <div class="output">
+      <p>Output:</p>
+      <textarea id=$output style="width: 400px; height: 400px;"></textarea>
+    </div>
+  </div>
+  <div style="clear: left; margin-top: 10px;">
+    Import: <input id=$import style="width: 600px;" value="[4013132132  8                      3      6            0                        3             6               3142241102]"> <button id=$load>Load</button><br>
+    Export: <input id=$export style="width: 600px;"> <button id=$update>Update</button><br>
+  </div>
+  <p>Note: Solving won't work in Edge and Safari until they support <code>TextEncoder</code> (or when the standards committee grace us with a simpler method of converting string to <code>Uint8Array</code>, whichever comes first).</p>
+  <p>Firefox ... sometimes works. It seems to handle <code>Uint8Array</code> slightly different from v8 which might cause binary desyncs :'( ymmv</p>
+  <div>
+    <p>(Between):</p>
+    <textarea id=$between style="width: 400px; height: 400px;"></textarea>
+  </div>
+  <script>
+    var exports = {};
+  </script>
+  <!--<script-->
+    <!--src="../../dist/fdq.js"-->
+    <!--onload="$loading.style.display = 'none';"-->
+    <!--onerror="-->
+      <!--$loading.innerHTML = '(<b>unable to load the lib, generate build first then refresh</b>)';-->
+      <!--$loading.style.color = 'red';-->
+    <!--"-->
+  <!--&gt;</script>-->
+  <script
+    src="fdq.dist.js"
+    onload="$loading.style.display = 'none';"
+    onerror="
+      $loading.innerHTML = '(<b>unable to load the lib, generate build first then refresh</b>)';
+      $loading.style.color = 'red';
+    "
+  ></script>
+  <script>
+    if (typeof FDO === 'undefined') {
+      console.error('Did not load library. Fix file and refresh.');
+    }
+
+    // ids per value per row/col: rows[x][value], cols[y][value]
+    let rows = [{},{},{},{},{},{},{},{},{},{}];
+    let cols = [{},{},{},{},{},{},{},{},{},{}];
+    function createEmptyNeighborChecks() {
+      let checkNeighbors = `($ii ==? EMPTY) -> (all?( ($hi !=? EMPTY) ($ih !=? EMPTY) ($ij !=? EMPTY) ($ji !=? EMPTY) ))`;
+
+      function to(n) { if (n === 10) return 'a'; return n; }
+
+      let neighbors = [];
+      for (let y=1; y<=9; ++y) {
+        for (let x=1; x<=9; ++x) {
+          let mask = {
+            // note: set OOB to 1 (otherwise the neighbor check will flag OOB cells for edges)
+            $hi: x > 1 ? '$' + to(x-1) + to(y) : '1',
+            $ih: y > 1 ? '$' + to(x) + to(y-1) : '1',
+            $ii: '$' + to(x) + to(y),
+            $ij: y < 9 ? '$' + to(x) + to(y+1) : '1',
+            $ji: x < 9 ? '$' + to(x+1) + to(y) : '1',
+          };
+          neighbors.push(
+            checkNeighbors.replace(/\$\w\w/g, function (m) {
+              if (!mask[m]) throw 'add me to masks: [' + m + ']';
+              return mask[m]
+            })
+          );
+        }
+      }
+
+      return `
+        # Neighbor checks
+        ${neighbors.join('\n')}
+      `;
+    }
+    function createPathChecks() {
+      let header = `
+        # All numbered cells must be connected
+        # The basic idea is that there is a path A-B if there
+        # is a path from A to any neighbor of B. If a cell is
+        # empty then there is no path leading to or from it.
+        # We compile an exhaustive list of path checks and we'll
+        # get complete coverage. On a 9x9 there are about 3300
+        # undirected paths (and about 6200 directed paths).
+
+        : NO_PATH 0
+        : HAS_PATH 1
+      `;
+
+      // if $ab!=$cd there exists a path $ab - $cd if and only if there exists a path from $ab to a neighbor of $cd
+
+      function p(x, y) { // zero offset
+        ++x;
+        ++y;
+        return '$' + x + y;
+      }
+
+      function poob(id, x, y) { // zero offset
+        if (x < 0 || y < 0 || x > 8 || y > 8) return 'NO_PATH'; // "there is no path to OOB cells"
+        let pid = p(x, y);
+        return 'P' + id + pid;
+      }
+
+      // we collect four things;
+      // - 1: a list of strings "P$ab$cd" var names because we dont want to hardcode those 6400 strings here. this var
+      //      identifies whether there is a path between $ab and $cd
+      // - 2: the constraint to set P$ab$cd 1 if $ab==$cd or when $ab isnt empty and $cd isnt empty and the P$ab$xy
+      //      of any neighbor of $cd is true (which implies they are all true). otherwise P$ab$cd is 0.
+      // - 3: a list of strings "C$ab" var names which hold a sum of reachable or empty cells. should sum to 81.
+      // - 4: the constraint to set C$ab to the sum of ($cd == EMPTY | P$ab$cd) for all cells $cd (81 of them)
+      let pathChecks = [];
+      let pathCache = {};
+      let pvarNames = [];
+      let cvarNames = [];
+      let confirms = [];
+      for (let n = 0; n < 81; ++n) {
+        let cParts = [];
+        let x1 = n % 9;
+        let y1 = Math.floor(n / 9);
+        let lo_id = p(x1, y1);
+
+        for (let m = 0; m < 81; ++m) {
+          // there is no path if n is an empty cell
+          // there is no path n~m if m is an empty cell
+          // there is a path n~m if n == m
+          // there is a path n~m if there is a path from n to any neighbor of m
+          // track paths because we only need to declare each (sub-)path once
+          let x2 = m % 9;
+          let y2 = Math.floor(m / 9);
+          let hi_id = p(x2, y2);
+          let key = 'P' + lo_id + hi_id;
+          cParts.push(`((${hi_id} ==? EMPTY) |? (${key} ==? HAS_PATH))`);
+          pvarNames.push(key);
+
+          if (!pathCache[key]) {
+            let pathCheck = '';
+            if (hi_id < lo_id) {
+              pathCheck = key + ' == P' + hi_id + lo_id + ' # (undirected path)';
+            } else if (n === m) {
+              pathCheck = `${key} == (${lo_id} !=? EMPTY) # ${key}`;
+            } else if ((x1 === x2 && Math.abs(y1 - y2) === 1) || (y1 === y2 && Math.abs(x1 - x2) === 1)) {
+              // neighbor cell. only do the empty checks
+              pathCheck = `${key} = all?( (${lo_id} !=? EMPTY) (${hi_id} !=? EMPTY) ) # ${key}`;
+            } else {
+              //something is wrong here. the some? is bad. it's allowing a 2x2 of empty cells to propagate a path throughout cells that arent connected when forced somewhere else
+              pathCheck = `${key} = all?( (${lo_id} !=? EMPTY) (${hi_id} !=? EMPTY) some?( ${poob(lo_id, x2 - 1, y2)} ${poob(lo_id, x2 + 1, y2)} ${poob(lo_id, x2, y2 - 1)} ${poob(lo_id, x2, y2 + 1)} ) ) # ${key}`;
+            }
+
+            pathCache[key] = pathCheck;
+            pathChecks.push(pathCheck);
+          }
+        }
+
+        cvarNames.push(`C${lo_id}`);
+        confirms.push(`C${lo_id} = sum( ${cParts.join(' ')} )`);
+        confirms.push(`(${lo_id} !=? EMPTY) -> (C${lo_id} ==? 81)`);
+      }
+
+      return `
+        ${header}
+
+        : ${pvarNames.join(', ')} [0 1]
+
+        # if a cell is OOB there is no path from/to it
+        # if a cell is EMPTY there is no path from/to it
+        # else if same cell then there is a path
+        # else if neighbor cell then there is a path between
+        # otherwise there is a path if there is a path to a neighbor cell
+
+        ${pathChecks.join('\n')}
+
+        # as the last step, require that all non-empty cells can reach all other non-empty cells
+
+        : ${cvarNames.join(', ')} *
+
+        # A cell is connected if it is empty or if it has a path to every other non-empty cell
+
+        ${confirms.join('\n')}
+
+        # Slightly roundabout but we require these conditions to hold regardless
+
+        # all( ${cvarNames.join(' ')} )
+      `;
+    }
+    function createPresets() {
+      let missing = false;
+
+      rows = [{},{},{},{},{},{},{},{},{},{}]; // collect ids per rol/col so we can dedupe them (such lazy, wow!)
+      cols = [{},{},{},{},{},{},{},{},{},{}];
+
+      let inputs = [...document.querySelectorAll('.puzzle input')];
+
+      inputs.forEach(inp => {
+        if (inp.value) {
+          if (inp.value !== '0') {
+            let id = inp.id;
+            let v = inp.value;
+            if (!cols[id[1]][v]) cols[id[1]][v] = [];
+            cols[id[1]][v].push(id);
+            if (!rows[id[2]][v]) rows[id[2]][v] = [];
+            rows[id[2]][v].push(id);
+          }
+        } else {
+          inp.setAttribute('data-value', 'bad');
+          missing = true;
+        }
+      });
+      if (missing) return;
+
+      let domains = [];
+      let uniques = [];
+      inputs.forEach(inp => {
+        if (inp.value) {
+          let id = inp.id;
+          let v = inp.value;
+
+          if (inp.value !== '0' && (cols[id[1]][v].length > 1 || rows[id[2]][v].length > 1)) {
+            if (inp.value === '1') domains.push(' : ' + inp.id + ' [0 ' + inp.value + ']');
+            else domains.push(': ' + inp.id + ' [0 0 ' + inp.value + ' ' + inp.value + ']');
+
+            // if this value of this id was the first of multiple in a row or column then enforce that of all related cells exactly one isnt EMPTY
+            if (cols[id[1]][v].length > 1 && cols[id[1]][v][0] == id) {
+              uniques.push('sum( ' + cols[id[1]][v].map(id => '(' + id +' !=? EMPTY)').join(' ') + ') <= 1');
+            }
+            if (rows[id[2]][v].length > 1 && rows[id[2]][v][0] === id) {
+              uniques.push('sum( ' + rows[id[2]][v].map(id => '(' + id +' !=? EMPTY)').join(' ') + ') <= 1');
+            }
+          } else {
+            domains.push(': ' + inp.id + ' ' + inp.value);
+          }
+        }
+      });
+
+      return `
+        # intial domains (domains that include 0 are values not unique in its row or col)
+        ${domains.join('\n')}
+`;`
+        # require unique values per row/col
+        ${uniques.length ? uniques.join('\n') : '# (no row or col contained dupe values, easiest puzzle!)'}
+      `;
+    }
+    function createPathLens() {
+      // the max distance between two tiles is about 46 (give or take) but absolutely far below 81 (9x9)
+
+      let maxx = +$w.value;
+      let maxy = +$h.value;
+
+      function d(P, x, y) {
+        if (x < 1 || x > maxx || y < 1 || y > maxy) {
+          return 'NEVER';
+        } else {
+          return P + '$' + x + y;
+        }
+      }
+
+      // set A to 0
+      // set all non-empty neighbors of A to 1
+      // set all their non-empty non-assigned neighbors to x+1
+      // stop when B is assigned a distance or when there are no more tiles available
+
+      let inputs = [...document.querySelectorAll('.puzzle input')];
+      let [x1, y1] = findStart(inputs);
+
+      let $aa = '$' + x1 + y1;
+      let D$aa = 'D' + $aa;
+
+      let NEVER = 99;
+      let W = +$w.value;
+      let H = +$h.value;
+
+      let strings = [];
+      let vars = [];
+      for (let x2=1; x2<=maxx; ++x2) {
+        for (let y2=1; y2<=maxy; ++y2) {
+          let $bb = '$' + x2 + y2;
+          let D$aa$bb = D$aa + $bb;
+
+          if ($aa === $bb) {
+            // this is the start cell so D is 0
+            vars.push(`: ${D$aa$bb} 0`);
+          } else {
+            let v2 = inputs[(x2-1)+(y2-1)*9].value;
+            if (v2 === '0') {
+              // doesnt happen in normal hitori puzzles...
+              vars.push(`: ${D$aa$bb} ${NEVER}`);
+            } else {
+
+              // max lengths of a snake that doesnt touch itself (except diagonally)
+              // note that this requires adjacent empty cells so the actual max is lower
+              // 1x1  1     1x1+0x1
+              // 1x2  2     1x2+0x1
+              // 1x3  3     1x3+0x1  2x1+1x1
+              // 1x4  4     1x4+0x1
+              // 2x1  1     1x2+0x1
+              // 2x2  3     1x2+1x1
+              // 2x3  5     2x2+1x1
+              // 2x4  6     1x4+1x1  2x2+2x1
+              // 3x1  3     1x3+0x1
+              // 3x2  5     1x3+1x1
+              // 3x3  7     2x3+1x1
+              // 3x4  9     2x4+1x1
+              // 4x1  4     1x4+0x1
+              // 4x2  6     1x4+1x1
+              // 4x3  9     2x4+1x1
+              // 4x4  11    2x4+2x1
+              // 4x5  14    3x4+2x1
+              // 5x5  17    3x5+2x1
+              // 5x7  23    3x7+2x1    4x5+3x1
+              // 6x4  14    3x4+3x1    2x6+2x1
+              // 6x7  27    4x6+3x1    3x7+3x1
+
+              // ceil(W/2)*H + floor(W/2)
+
+              let dx = Math.abs(x1-x2) + 1;
+              let dy = Math.abs(y1-y2) + 1;
+
+              // uneven is always more efficient than even, but actual length is irrelevant
+              // for even use the shortest side
+//              let sup = Math.max(Math.ceil(dx/2) * H + Math.floor(dx), Math.ceil(dy/2) * W + Math.floor(dy));
+
+              // minimal distance x1y1,x2y2 is the vector
+              let lo = Math.max(0, dx + dy - 1);
+              let hi = Math.max(Math.ceil(W/2) * H + Math.floor(W), Math.ceil(H/2) * W + Math.floor(H));
+              if (hi >= NEVER) throw Error('hi was bigger than the NEVER value, wruh-roh [' + NEVER + ', ' + lo + ', ' + hi + ']');
+
+
+              let dom = [lo];
+
+              if (rows[y2][v2].length === 1 && cols[x2][v2].length === 1) {
+                dom.push(hi);
+
+                // value in cell $ii does not occur in other cells in the same row/col
+                strings.push(`some( (${d(D$aa, x2-1,y2)} <? ${D$aa$bb}) (${d(D$aa, x2+1,y2)} <? ${D$aa$bb}) (${d(D$aa, x2,y2-1)} <? ${D$aa$bb}) (${d(D$aa, x2,y2+1)} <? ${D$aa$bb}) )`);
+              } else {
+                if (hi === NEVER-1) dom.push(NEVER);
+                else if (hi > NEVER) dom.push(hi);
+                else dom.push(hi, NEVER, NEVER);
+
+                // value in cell $ii occurs at least once in another cell in the same row/col
+                strings.push(`(${$bb} ==? EMPTY) == (${D$aa$bb} ==? TOO_FAR)`);
+                strings.push(`(${$bb} !=? EMPTY) -> some?( (${d(D$aa, x2-1,y2)} <? ${D$aa$bb}) (${d(D$aa, x2+1,y2)} <? ${D$aa$bb}) (${d(D$aa, x2,y2-1)} <? ${D$aa$bb}) (${d(D$aa, x2,y2+1)} <? ${D$aa$bb}) )`);
+              }
+
+              vars.push(`: ${D$aa$bb} [${dom}] # ${Math.ceil(dx/2) * H + Math.floor(dx)} or ${Math.ceil(dy/2) * W + Math.floor(dy)}`);
+            }
+          }
+        }
+      }
+
+      return `
+        # trying to get distance between each tile A and B
+        : TOO_FAR 50
+        : NEVER ${NEVER}
+
+        ${vars.join('\n')}
+
+        ${strings.join('\n')}
+      `;
+    }
+    function findStart(inputs) {
+      // find the center-most tile that has no duplicates and is not already empty
+      let w2 = $w.value>>2;
+      let h2 = $h.value>>2;
+      let list = inputs.slice(0).filter(inp => {
+        inp.style.color = 'inherit';
+
+        let x = +inp.id[1]-1;
+        let y = +inp.id[2]-1;
+        let v = inputs[x+y*9].value;
+        return v !== '0' && rows[y+1][v].length === 1 && cols[x+1][v].length === 1
+      }).sort((a,b) => {
+        let x1 = +a.id[1]-1;
+        let y1 = +a.id[2]-1;
+        let d1 = (((x1-2)-w2)**2)+(((y1-2)-h2)**2)
+        let x2 = +b.id[1]-1;
+        let y2 = +b.id[2]-1;
+        let d2 = (((x2-2)-w2)**2)+(((y2-2)-h2)**2)
+        return d1 > d2 ? 1 :d1 < d2 ? -1 : 0;
+      });
+
+      let best = list[0];
+      let x1 = +best.id[1];
+      let y1 = +best.id[2];
+
+      best.style.color = 'green';
+
+      return [x1, y1];
+    }
+
+    let header = `
+      # note: a cell value 0 means the cell is blacked out
+      # this helps because that makes all those cells
+      # booly-pairs which is highly optimizable with logic ops
+
+      : EMPTY 0
+    `;
+
+    let allNeighborChecks = createEmptyNeighborChecks();
+    let allPathChecks = createPathChecks();
+
+    let bak = '';
+
+    $solve.onclick = function(){
+      $input.value = '';
+      $output.value = '';
+      $timeoutwarn.style.display = 'none';
+      $puzzle.style.backgroundColor = 'transparent';
+
+      bak = getPuzzleCode();
+      $reset.disabled = false;
+
+      let start = Date.now();
+      let disabled = $timeout.checked;
+      let optionsFD = {
+        log: 1,
+        max: 1,
+        beforeSpace: s => {
+          if (!disabled) return false;
+          if (Date.now() - start > 5000) { // 5s timeout
+            $timeoutwarn.style.display = 'block';
+            return true;
+          }
+          return false;
+        },
+      };
+      let optionsPre = {
+        log: 1,
+        debugDsl: true,
+        indexNames: false,
+        hashNames: false,
+        groupedConstraints: true,
+        printDslAfter: s => $between.value += s + '\n\n',
+      };
+
+      $update.onclick();
+
+
+      let problem =
+        header + '\n\n' +
+        createPresets() + '\n\n' +
+//        allNeighborChecks + '\n\n' +
+//        allPathChecks +'\n\n' +
+        createPathLens() + '\n\n' +
+      '';
+      $input.value = problem.split(/\n/g).map(line => line.trim()).join('\n');
+
+      // give UI time to update
+      setTimeout(() => {
+        let solution;
+        if ($pre.checked) {
+          let t = FDO.pre(problem, optionsPre, optionsFD);
+          solution = t;
+        } else {
+          let s = FDO.dsl(problem);
+          s.solve(optionsFD);
+          let t = s.solutions;
+          if (t.length === 0) solution = false;
+          else solution = t[0];
+        }
+        $output.value = JSON.stringify(solution).replace(/"/g, '');
+        if (solution === false) {
+          $puzzle.style.backgroundColor = 'lightpink';
+        } else {
+          $puzzle.style.backgroundColor = 'lightgreen';
+
+          [...document.querySelectorAll('.inputs input')].forEach(inp => {
+//            setInput(inp.id, solution[inp.id] + (solution[inp.id]===0?'':'|' + solution['C' + inp.id]));
+//            setInput(inp.id, solution[inp.id] + ('|' + solution['P$21' + inp.id]));
+//            setInput(inp.id, solution[inp.id] + ('|' + solution['P$12' + inp.id]));
+//            setInput(inp.id, solution[inp.id] + (solution[inp.id]===0?'':'|' + solution['D$11' + inp.id]));
+          });
+        }
+      }, 10);
+    };
+
+    $puzzle.onchange = $puzzle.onkeyup = e => {
+      $puzzle.style.backgroundColor = 'transparent';
+      if (e.target.nodeName === 'INPUT') e.target.setAttribute('data-value', e.target.value);
+    };
+
+    function load(puzzle) {
+      if (puzzle[0] !== '[' || puzzle[puzzle.length-1] !== ']') {
+        $import.style.backgroundColor = 'tomato';
+        return;
+      }
+      [...document.querySelectorAll('.inputs input')].forEach((inp, i) => _setInput(inp, (' []undefined'.indexOf(puzzle[i+1]) >= 0 ? '' : puzzle[i+1])));
+    }
+
+    $reset.onclick = _ => load(bak);
+
+    $load.onclick = function(){
+      load($import.value);
+    };
+
+    function getPuzzleCode() {
+      let exp = [];
+      [...document.querySelectorAll('.inputs input')].forEach(inp => inp.value ? exp.push(inp.value) : exp.push(' '));
+      return '[' + exp.join('') + ']';
+    }
+
+    $update.onclick = function(){
+      $export.value = getPuzzleCode();
+    };
+
+    $clear.onclick = function(){
+      [...document.querySelectorAll('.inputs input')].forEach(inp => _setInput(inp, ''));
+    };
+//
+    $load1.onclick = function(){
+      $import.value = '[102340567201030405314025608000000001428053706503010204605070102706080309807260943]';
+      // [108270635201080706302010807403020108514036209000000001675048302706050403807160524]
+//      $import.value = '[109280736201090807302010908403020109504030201605040302726051503000000004918372645]';
+//      $import.value = '[109280736201090807302010908403020109504030201605040302706050403807060504918072605]';
+      load($import.value);
+    };
+
+    $load2.onclick = function(){
+      // http://puzzleparasite.blogspot.nl/2012/11/13th-24-hour-puzzle-championship.html
+      $import.value = '[924355686277928441746132879461117351915277453159745728731841768958769132875553715]';
+      load($import.value);
+    };
+
+    $load3.onclick = function(){
+      //http://puzzleparasite.blogspot.nl/2012/11/13th-24-hour-puzzle-championship.html
+      $import.value = '[924350680207908041046032879460107350015270403109045728730801060058769132870503010]';
+      load($import.value);
+    };
+
+    function setInput(id, value) {
+      _setInput(window[id], value)
+    }
+    function _setInput(input, value) {
+      input.value = value;
+      $puzzle.style.backgroundColor = 'transparent';
+      input.setAttribute('data-value', value);
+    }
+
+    ($w.onkeyup = $h.onkeyup = function(){
+      [...document.querySelectorAll('.inputs input')].forEach(inp => inp.style.fontWeight = ((inp.id[1] <= $w.value && inp.id[2] <= $h.value) ? 'bold' : 'normal'));
+    })();
+
+    setTimeout($load1.onclick, 10);
+  </script>
+</body>
+</html>

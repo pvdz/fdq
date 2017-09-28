@@ -1,0 +1,164 @@
+This is the grammar for a custom constraint language for FDO/FDP.
+
+Goal symbol is `cfg`, insignificant whitespace is `whitespace`:
+
+cfg:
+  statements
+statements:
+  statement [statements]
+statement:
+  newline
+  comment
+  atrule newline
+  varstmt newline
+  constraint newline
+whitespace:
+  ` `
+  `\t`
+newline:
+  `\r`
+  `\n`
+comment:
+  /#.*$/m
+anywhitespace:
+  whitespace
+  newline
+ident:
+  quoted-ident
+  unquoted-ident
+quoted-ident:
+  /'[^']+'/
+  can contain anything except single quotes
+  must be quoted throughout the input problem
+  solver will use name as if without quotes (relevant when reading results or debugging)
+unquoted-ident:
+  /[-a-zA-Z_$\u007f-\uffff][-a-zA-Z0-9_$\u007f-\uffff]*/
+  cannot result in a keyword of this CFG
+  (any sup-ascii char is allowed, even the whitespacy ones, that's not my responsibility)
+idents:
+  ident [`,` idents]
+number:
+  /\d+/
+atrule:
+  `@custom` ident [`=`] *
+  `@custom` `var-strat` [`fallback`] [`=`] (`naive` | `size` | `min` | `max` | `throw`)
+  `@custom` `var-strat` [`fallback`] [`inverted`] [`list`] `(` idents `)`
+  `@custom` `set-valdist` ident [`=`] <json string>
+  `@custom` `targets` [`=`] all`
+  `@custom` `targets` `(` idents `)`
+*:
+  i'm just being lazy. parse through to eol. hand of to special handler for this @rule. todo
+mode:
+  `constraints`
+  `propagators`
+varstmt:
+  `:` ident [`=`] domain mods
+domain:
+  pair
+  `[` `]`
+  `[` lohis `]`
+  `[` pairs `]`
+  `*`
+  number
+lohis =
+  lohi [lohi]
+lohi =
+  number [`,`] number [`,`]
+pair:
+  `[` lohi `]`
+pairs:
+  pair [`,`] [pairs]
+mods:
+  mod [mods]
+mod:
+  `@markov` markov
+  `@list` prio
+  `@max`
+  `@mid`
+  `@min`
+  `@minMaxCycle`
+  `@naive`
+  `@splitMax`
+  `@splitMin`
+prio:
+  `prio(` expressions `)`
+markov:
+  marko [markov]
+marko:
+  matrix
+  legend
+  expand
+matrix:
+  `matrix(` "literal" `)`
+  the literal is a matrix object that can be evalled like [{vector:[1,0],_boolVarIndex:2},{vector:[0,1]}]
+legend:
+  `legend(` expressions `)`
+expand:
+  `expand(` number `)`
+constraint:
+  expr [cop expr]
+  nulcall
+expr: // does not return a value (expression statement)
+  vexpr [rop vexpr]
+vexpr: // value returning expression (var or constant value)
+  valcall
+  ident
+  number
+  grouping
+expressions:
+  expr [[`,`] expressions]
+nulcall:
+  `all(` expressions `)`
+  `diff(` expressions `)`
+  `nall(` expressions `)`
+  `none(` expressions `)`
+  `same(` expressions `)`
+  `some(` expressions `)`
+  `xnor(` expressions `)`
+valcall:
+  `sum` `(` expressions `)`
+  `product` `(` expressions `)`
+  `all?` `(` expressions `)`
+  `diff?` `(` expressions `)`
+  `nall?` `(` expressions `)`
+  `same?` `(` expressions `)`
+  `some?` `(` expressions `)`
+  `none?` `(` expressions `)`
+rop: // reflecting op (not a constraint on its own, but enforces result var state)
+  `==?`
+  `!=?`
+  `<?`
+  `<=?`
+  `>?`
+  `>=?`
+  `|?`
+  `!|?`
+  `&?`
+  `!&?`
+  `+`
+  `-`
+  `*`
+  `/`
+cop: // constraining op, has no result
+  `==`
+  `!=`
+  `<`
+  `<=`
+  `>`
+  `>=`
+  `&`
+  `!&`
+  `|`
+  `!|`
+  `^`
+  `!^`
+  `->`
+  `!->`
+grouping:
+  `(` vexpr `)`
+  `(` grouping `)`
+
+
+There's currently only one semantic rule that we can't codify in the CFG:
+
+- Vars must either be explicitly (through the colon) or implicitly (by being a result var) declared before being used as a value. You cannot implicitly declare and use a constraint in the same statement. It's considered a parse error if a var is used prematurely.
