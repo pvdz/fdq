@@ -108,7 +108,7 @@
   <p id=$loading>(Trying to load library)</p>
   <div style="overflow: auto;">
     <div class="control">
-      <button id=$solve>Solve</button> <button id=$clear>Clear</button><br>
+      <button id=$solve>Solve</button> <button id=$clear>Clear</button> <button id=$reset disabled>Reset</button><br>
       <br>
       <label><input type="checkbox" id=$timeout checked onchange="this.parentNode.style.color = this.checked?'inherit':'red'"> Timeout protection</label><br>
       <br>
@@ -311,11 +311,16 @@
 
     dsl += cells.join('\n\n');
 
+    let bak = '';
+
     $solve.onclick = function(){
       $input.value = '';
       $output.value = '';
       $timeoutwarn.style.display = 'none';
       $puzzle.style.backgroundColor = 'transparent';
+      $reset.disabled = false;
+
+      bak = getPuzzleCode();
 
       let start = Date.now();
       let disabled = $timeout.checked;
@@ -419,10 +424,20 @@
       [...document.querySelectorAll('.inputs input')].forEach((inp, i) => _setInput(inp, (' []undefined'.indexOf(v[i+5]) >= 0 ? '' : v[i+5])));
     };
 
-    $update.onclick = function(){
+    $reset.onclick = _ => {
+      $import.value = bak;
+      $load.onclick();
+    }
+
+    function getPuzzleCode() {
       let exp = [];
       [...document.querySelectorAll('.inputs input')].forEach(inp => inp.value ? exp.push(inp.value) : exp.push(' '));
-      $export.value = $boats1.value + $boats2.value + $boats3.value + $boats4.value + '[' + exp.join('') + ']';
+
+      return $boats1.value + $boats2.value + $boats3.value + $boats4.value + '[' + exp.join('') + ']'
+    }
+
+    $update.onclick = function(){
+      $export.value = getPuzzleCode();
     };
 
     $clear.onclick = function(){
