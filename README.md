@@ -1,4 +1,4 @@
-# FDQ - Finite Domain solver by qFox
+# FDQ - Finite Domain solver by Peter van der Zee
 
 This is a finite domain reduction system and solver combined. The fdq package combines fdo and fdq together.
 
@@ -20,26 +20,26 @@ log(solution); // -> {A: 0, B: 1, C: 1}
 
 ## Examples
 
-There is a REPL (online web-based playground) available: [https://qfox.github.io/fdq/examples/playground.html](https://qfox.github.io/fdq/examples/playground.html)
+There is a REPL (online web-based playground) available: [https://pvdz.github.io/fdq/examples/playground.html](https://pvdz.github.io/fdq/examples/playground.html)
 
 Some examples:
 
-- [Sudoku solver](https://qfox.github.io/fdq/examples/sudoku.html)
-- [Battleships solver](https://qfox.github.io/fdq/examples/battleships.html)
-- [Tree-Tent solver](https://qfox.github.io/fdq/examples/treetent.html)
-- [Hitori solver (wip)](https://qfox.github.io/fdq/examples/hitori.html)
+- [Sudoku solver](https://pvdz.github.io/fdq/examples/sudoku.html)
+- [Battleships solver](https://pvdz.github.io/fdq/examples/battleships.html)
+- [Tree-Tent solver](https://pvdz.github.io/fdq/examples/treetent.html)
+- [Hitori solver (wip)](https://pvdz.github.io/fdq/examples/hitori.html)
 
 ## Development
 
 To set up a development environment create a main project dir. Inside it clone the following repos:
 
-- [fdh](https://github.com/qfox/fdh) - all the generic e2e/integration tests for both fdo and fdq
-- [fdlib](https://github.com/qfox/fdlib) - shared code for fdo and fdq
-- [fdo](https://github.com/qfox/fdo) - a constraint brute force solver
-- [fdp](https://github.com/qfox/fdp) - a constraint problem reduction system
-- [fdq](https://github.com/qfox/fdq) - this repo
-- [fdv](https://github.com/qfox/fdv) - an automated verifier for tests
-- [fdz](https://github.com/qfox/fdz) - (optional) these are performance tests (they might be merged into the fdq repo instead)
+- [fdh](https://github.com/pvdz/fdh) - all the generic e2e/integration tests for both fdo and fdq
+- [fdlib](https://github.com/pvdz/fdlib) - shared code for fdo and fdq
+- [fdo](https://github.com/pvdz/fdo) - a constraint brute force solver
+- [fdp](https://github.com/pvdz/fdp) - a constraint problem reduction system
+- [fdq](https://github.com/pvdz/fdq) - this repo
+- [fdv](https://github.com/pvdz/fdv) - an automated verifier for tests
+- [fdz](https://github.com/pvdz/fdz) - (optional) these are performance tests (they might be merged into the fdq repo instead)
 
 Run `npm install` and you should be able to use the CLI tools.
 
